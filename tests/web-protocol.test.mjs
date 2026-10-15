@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {K810,CONTROLS,CONFIG_SIZE,offset,packet,writePackets,hex,baseFromHeader,backupOf,parseBackup,keymapOnly,
   WHEEL_ACTIONS,WHEEL_OFFSET,wheelValue,setWheel,settingsOnly,diffSettings} from '../web/protocol.mjs';
 const vectors=JSON.parse(await readFile(new URL('./vendor_vectors.json',import.meta.url)));
+const applyVectors=JSON.parse(await readFile(new URL('./vendor_apply_vectors.json',import.meta.url)));
 const noWait=async()=>{};
 
 class MockDevice {
@@ -14,15 +15,21 @@ class MockDevice {
     this.memory.set([0xe1,0x1e,0xe0,0,0xf0,0x0f,0,0],0xd0);
     this.memory.set(Array.from({length:CONFIG_SIZE},(_,i)=>i%255),0xe0);
     this.trace=[];this.staged=[];this.readAt=0;this.commits=0;
+    this.operatingFlags=this.memory[0xe0];this.writes=[];
   }
   async sendFeatureReport(id,bytes) {
     const b=Uint8Array.from([id,...bytes]);this.trace.push({set:hex(b)});
     assert.equal(bytes.length,7);
     const address=b[4]+b[5]*256;
+    if(b[1]===9) this.operatingFlags=b[2];
     if(b[1]!==0x18) return;
     if(b[2]===3) this.staged[b[3]]=b[6];
     if(b[2]===5) this.readAt=address+b[3];
-    if(b[2]===9) {this.memory.set(this.staged.slice(0,b[7]+1),address);this.commits++;}
+    if(b[2]===9) {
+      this.memory.set(this.staged.slice(0,b[7]+1),address);this.commits++;
+      this.writes.push({address,data:this.memory.slice(address,address+b[7]+1)});
+      if(address===0xe0) this.operatingFlags=this.memory[0xe0];
+    }
   }
   async receiveFeatureReport(id) {
     this.trace.push({get:8});
@@ -52,7 +59,9 @@ test('save only selected key bytes, preserve neighboring rows and all other conf
   draft[0]=200;draft[offset('kp1')+1]=3;draft[0xc8]=8;
   let recovery;
   const after=await api.apply(before,draft,async doc=>{recovery=doc;});
-  assert.deepEqual(after.data,keymapOnly(before.data,draft));assert.equal(device.commits,2);
+  assert.deepEqual(after.data,keymapOnly(before.data,draft));assert.equal(device.commits,3);
+  assert.deepEqual(device.writes[0],{address:before.base,data:before.data.slice(0,8)});
+  assert.equal(device.operatingFlags,before.data[0]);
   assert.deepEqual((await parseBackup(recovery)).data,before.data);
 });
 test('refuse stale snapshots before committing writes',async()=>{
@@ -100,18 +109,39 @@ test('wheel nibble packing matches original x86 packer and one-byte write',()=>{
   }
   assert.deepEqual(WHEEL_ACTIONS.map(a=>a[0]),[0,1,2,3,7,8,9,10]);
 });
-test('both wheel directions are committed as exactly one byte with no other changes',async()=>{
+test('wheel save replays control block to activate settings and commits one wheel byte',async()=>{
   const device=new MockDevice(),api=new K810(device,{wait:noWait});
   device.memory[0xe0+WHEEL_OFFSET]=0x10;
   const before=await api.snapshot();
   const draft=setWheel(setWheel(before.data,'up',2),'down',3);
   const after=await api.apply(before,draft,async()=>{});
   assert.equal(diffSettings(before.data,draft).length,2);
-  assert.equal(device.commits,1);assert.equal(after.data[WHEEL_OFFSET],0x23);
+  assert.equal(device.commits,2);assert.equal(after.data[WHEEL_OFFSET],0x23);
+  assert.deepEqual(device.writes,[{address:before.base,data:before.data.slice(0,8)},{address:before.base+WHEEL_OFFSET,data:Uint8Array.of(0x23)}]);
+  assert.equal(device.operatingFlags,before.data[0]);
   assert.deepEqual(after.data.slice(0,WHEEL_OFFSET),before.data.slice(0,WHEEL_OFFSET));
   assert.deepEqual(after.data.slice(WHEEL_OFFSET+1),before.data.slice(WHEEL_OFFSET+1));
   assert.equal(api.configurationActive,false);
   assert.deepEqual(device.trace.slice(-3).map(x=>x.set),['0718110000000000','0718000000000000','0720000000000000']);
+});
+
+test('activation prelude follows the full original Apply trace for both KEYSMODE values',async()=>{
+  assert.equal(applyVectors.source_sha256,vectors.source_sha256);
+  for(const name of ['synthetic_apply','keys_mode_zero']) {
+    const trace=applyVectors[name],writes=trace.filter(x=>'write_address' in x);
+    assert.equal(trace[0].set,'0709410000000000');
+    const control=writes.find(x=>x.write_address===0xe0),wheel=writes.find(x=>x.write_address===0x100);
+    assert.ok(writes.indexOf(control)<writes.indexOf(wheel));
+    const device=new MockDevice();device.memory.set(Buffer.from(control.data,'hex'),0xe0);
+    device.memory[0x100]=0x10;
+    const api=new K810(device,{wait:noWait}),before=await api.snapshot();
+    await api.apply(before,setWheel(setWheel(before.data,'up',2),'down',3),async()=>{});
+    assert.deepEqual(device.writes.map(x=>({write_address:x.address,data:hex(x.data)})),[control,wheel]);
+    assert.equal(device.operatingFlags,parseInt(control.data.slice(0,2),16));
+    const current=await api.snapshot(),commits=device.commits;
+    await api.apply(current,current.data,async()=>{throw new Error('No backup required for noop');});
+    assert.equal(device.commits,commits);
+  }
 });
 test('each wheel edit preserves opposite direction and rejects unsupported backup values',()=>{
   const original=new Uint8Array(CONFIG_SIZE);original[WHEEL_OFFSET]=0x10;

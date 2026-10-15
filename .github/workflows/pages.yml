@@ -2,7 +2,7 @@ name: Publish K810 configurator
 on:
   push:
     branches: [main]
-    paths: ['web/**', 'tests/web-protocol.test.mjs', 'tests/vendor_vectors.json', '.github/workflows/pages.yml']
+    paths: ['web/**', 'tests/web-protocol.test.mjs', 'tests/vendor_vectors.json', 'tests/vendor_apply_vectors.json', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:

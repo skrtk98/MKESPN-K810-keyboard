@@ -1,0 +1,291 @@
+{
+  "source_sha256": "ef79b5e0ad1786dd682bc8ed1dad4626627c0518639ec67a702088d6322b8e36",
+  "synthetic_apply": [
+    {
+      "set": "0709410000000000"
+    },
+    {
+      "sleep_ms": 200
+    },
+    {
+      "get": 16
+    },
+    {
+      "write_address": 208,
+      "data": "e11ee000f00f0000"
+    },
+    {
+      "read_address": 224,
+      "length": 1
+    },
+    {
+      "write_address": 224,
+      "data": "8000000000000000"
+    },
+    {
+      "write_address": 232,
+      "data": "0000000000000080"
+    },
+    {
+      "write_address": 240,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 248,
+      "data": "000080002801d801"
+    },
+    {
+      "write_address": 256,
+      "data": "23"
+    },
+    {
+      "write_address": 296,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 304,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 312,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 320,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 328,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 336,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 344,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 352,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 360,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 368,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 376,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 384,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 392,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 400,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 408,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 416,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 424,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 432,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 440,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 448,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 456,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 464,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 472,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 480,
+      "data": "0000000000000000"
+    },
+    {
+      "set": "0718110000000000"
+    },
+    {
+      "sleep_ms": 10
+    },
+    {
+      "set": "0718000000000000"
+    }
+  ],
+  "keys_mode_zero": [
+    {
+      "set": "0709410000000000"
+    },
+    {
+      "sleep_ms": 200
+    },
+    {
+      "get": 16
+    },
+    {
+      "write_address": 208,
+      "data": "e11ee000f00f0000"
+    },
+    {
+      "read_address": 224,
+      "length": 1
+    },
+    {
+      "write_address": 224,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 232,
+      "data": "0000000000000080"
+    },
+    {
+      "write_address": 240,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 248,
+      "data": "000080002801d801"
+    },
+    {
+      "write_address": 256,
+      "data": "23"
+    },
+    {
+      "write_address": 296,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 304,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 312,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 320,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 328,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 336,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 344,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 352,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 360,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 368,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 376,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 384,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 392,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 400,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 408,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 416,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 424,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 432,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 440,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 448,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 456,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 464,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 472,
+      "data": "0000000000000000"
+    },
+    {
+      "write_address": 480,
+      "data": "0000000000000000"
+    },
+    {
+      "set": "0718110000000000"
+    },
+    {
+      "sleep_ms": 10
+    },
+    {
+      "set": "0718000000000000"
+    }
+  ]
+}

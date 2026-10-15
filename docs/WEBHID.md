@@ -52,7 +52,11 @@ configuration collection is separately accessible.
 - Each changed column is written as its original 8-byte block with the other
   seven bytes preserved. The wheel's two nibbles are combined into one single-byte
   write, preserving the opposite direction when only one changes. RGB settings,
-  wheel matrix columns, macros and configuration headers are never writable.
+  wheel matrix columns, macros and configuration headers cannot be edited.
+- Every nonempty save first replays the current eight-byte control block at
+  `base + 0`, even though its bytes are unchanged. The original Apply handler
+  writes this block after `07 09 41`. Omitting it left the saved wheel assignments
+  inactive in hardware testing. Drafts/imports cannot alter these control bytes.
 - Before writing, read the configuration again and compare with the session
   snapshot; concurrent changes cause an abort.
 - Web Locks serialize USB operations between same-origin tabs. Close other
@@ -88,7 +92,7 @@ it has not undergone an independent accessibility conformance audit.
 
 ## Verification on 2026-10-15
 
-- Node tests: fourteen passing cases, including original-app x86 packet fixtures,
+- Node tests: fifteen passing cases, including original-app x86 packet fixtures,
   report-ID handling, header validation, stale snapshots, storage failure,
   exclusive operation cleanup and backup integrity.
 - Desktop Chrome on the user's PC: authorized `USB Keyboard`, read configuration
@@ -100,11 +104,26 @@ it has not undergone an independent accessibility conformance audit.
 - Python CLI: changed wheel byte `10 → 20 → 23`, verified complete configuration
   readback, then restored `10`. The user confirmed scrolling in custom mode and
   volume changes after restoration without USB reconnect using the corrected CLI.
-- The stick push switches between fixed volume mode and custom wheel mode.
-  LED action codes were recovered from the application but physical LED effects
-  have not been verified.
+- The initial implementation incorrectly required a stick push as a workaround.
+  This was not established as original-app behavior. Replaying the current
+  control block restored immediate scrolling without a stick push or USB reconnect
+  in a user-operated hardware test. LED effects remain unverified.
 - WebHID UI: changed both wheel directions from `10` to `23` in one commit and
   restored `10`; both saves passed the complete 248-byte readback comparison.
 
 Individual physical key assignment events, other OSes,
 and other hardware/firmware versions are not part of this verification.
+
+## Reinvestigation of inactive wheel settings
+
+The manufacturer's K810 download was fetched again on 2026-10-15. Its ZIP hash
+still matched the source recorded in PROTOCOL.md. `tools/trace_vendor_apply.py`
+emulates the complete no-macro Apply path `0x410239..0x412528`, intercepting all
+HID and Sleep calls; this synthetic trace is distinct from a USB capture.
+`tests/vendor_apply_vectors.json` records both `KEYSMODE=0` and `KEYSMODE=1`.
+The original writes the control block before the wheel byte. The control byte's
+bit 7 comes from `KEYSMODE`; other bits contain unrelated settings and are
+preserved by this implementation. Python now has twelve passing test cases.
+The corrected WebHID UI also passed a user-operated scrolling test immediately
+after saving, with no stick push and no USB reconnect. Both directions were then
+restored to their values at the start of this reinvestigation.

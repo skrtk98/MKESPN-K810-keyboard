@@ -11,6 +11,7 @@ from mkespn_k810_keyboard.protocol import (control_offset, keycode, packet, writ
     CONFIG_SIZE, WHEEL_ACTIONS, WHEEL_OFFSET, wheel_action, set_wheel, changed_blocks)
 
 VECTORS = json.loads(Path(__file__).with_name('vendor_vectors.json').read_text())
+APPLY_VECTORS = json.loads(Path(__file__).with_name('vendor_apply_vectors.json').read_text())
 
 
 class FakeHid:
@@ -33,6 +34,19 @@ class FakeHid:
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_original_apply_replays_control_block_before_wheel(self):
+        self.assertEqual(APPLY_VECTORS['source_sha256'], VECTORS['source_sha256'])
+        for mode, name in ((1, 'synthetic_apply'), (0, 'keys_mode_zero')):
+            trace = APPLY_VECTORS[name]
+            self.assertEqual(trace[0], {'set': '0709410000000000'})
+            writes = [x for x in trace if 'write_address' in x]
+            control = next(x for x in writes if x['write_address'] == 0xE0)
+            wheel = next(x for x in writes if x['write_address'] == 0x100)
+            self.assertEqual(len(bytes.fromhex(control['data'])), 8)
+            self.assertEqual(bytes.fromhex(control['data'])[0] >> 7, mode)
+            self.assertEqual(wheel['data'], '23')
+            self.assertLess(writes.index(control), writes.index(wheel))
+
     @patch('mkespn_k810_keyboard.device.time.sleep')
     def test_close_exits_configuration_mode(self, sleep):
         device = object.__new__(Device); device.hid = FakeHid()
@@ -72,10 +86,20 @@ class ProtocolTests(unittest.TestCase):
                 self.assertEqual(after[:WHEEL_OFFSET], before[:WHEEL_OFFSET])
                 self.assertEqual(after[WHEEL_OFFSET+1:], before[WHEEL_OFFSET+1:])
                 blocks = changed_blocks(before, after)
-                self.assertTrue(all(o == WHEEL_OFFSET and len(b) == 1 for o, b in blocks))
+                if blocks:
+                    self.assertEqual(blocks[0], (0, before[:8]))
+                    self.assertTrue(all(o == WHEEL_OFFSET and len(b) == 1 for o, b in blocks[1:]))
         with self.assertRaises(ValueError): set_wheel(before, 'up', 'f13')
         after = bytearray(before); after[0] ^= 1
         with self.assertRaises(ValueError): changed_blocks(before, after)
+
+    def test_writes_replay_unchanged_control_block_and_noop_does_not_write(self):
+        before = bytes([0xC0, 0xF0, 0x1F, 0x0F, 0x1F, 0xFF, 0, 0xF0]) + bytes(CONFIG_SIZE-8)
+        self.assertEqual(changed_blocks(before, before), [])
+        after = set_wheel(before, 'up', 'scroll-up')
+        self.assertEqual(changed_blocks(before, after), [(0, before[:8]), (WHEEL_OFFSET, b'\x20')])
+        after = bytearray(before); after[control_offset('kp1')] = 104
+        self.assertEqual(changed_blocks(before, after)[0], (0, before[:8]))
     def test_write_matches_original_x86(self):
         actual = [{"set": b.hex()} for b in write_packets(VECTORS['address'], bytes.fromhex(VECTORS['data']))]
         self.assertEqual(VECTORS['write'], actual)

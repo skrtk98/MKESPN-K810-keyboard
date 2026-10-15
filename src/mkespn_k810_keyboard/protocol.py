@@ -30,7 +30,7 @@ def set_wheel(data: bytes, direction: str, action: str) -> bytearray:
 
 
 def changed_blocks(before: bytes, after: bytes) -> list[tuple[int, bytes]]:
-    """Only keymap blocks and the exact single wheel byte can be committed."""
+    """Plan edits plus the unchanged control block required to activate them."""
     if len(before) != CONFIG_SIZE or len(after) != CONFIG_SIZE:
         raise ValueError("Invalid configuration length")
     allowed = set(range(KEYMAP_OFFSET, KEYMAP_OFFSET + 160)) | {WHEEL_OFFSET}
@@ -40,7 +40,10 @@ def changed_blocks(before: bytes, after: bytes) -> list[tuple[int, bytes]]:
               if before[o:o + 8] != after[o:o + 8]]
     if before[WHEEL_OFFSET] != after[WHEEL_OFFSET]:
         blocks.append((WHEEL_OFFSET, bytes(after[WHEEL_OFFSET:WHEEL_OFFSET + 1])))
-    return blocks
+    # The vendor Apply handler rewrites this block after 07/09/41. Omitting it
+    # leaves stored assignments readable but inactive until a physical mode change.
+    # Never take these bytes from an imported/tampered draft.
+    return [(0, bytes(before[:8])), *blocks] if blocks else []
 
 # Names describe the factory function, not an assumed physical row/column.
 CONTROLS = {

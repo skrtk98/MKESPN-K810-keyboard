@@ -183,8 +183,11 @@ export class K810 {
       const current=await this.snapshot();
       if(current.base!==snapshot.base || !equal(current.data,snapshot.data)) throw new Error('本体の設定が変更されています。再読み取りして編集し直してください。');
       await saveRecovery(await backupOf(current)); // Failure MUST abort before EEPROM commits.
-      const blocks=changes.filter(c=>c.kind!=='wheel').map(c=>({address:current.base+offset(c.id),data:intended.slice(offset(c.id),offset(c.id)+8)}));
+      // Replaying the current control block is required even when it has no
+      // changed bytes. The original Apply handler writes it after 07/09/41.
+      const blocks=[{address:current.base,data:current.data.slice(0,8)}];
       if(current.data[WHEEL_OFFSET]!==intended[WHEEL_OFFSET]) blocks.push({address:current.base+WHEEL_OFFSET,data:intended.slice(WHEEL_OFFSET,WHEEL_OFFSET+1)});
+      blocks.push(...changes.filter(c=>c.kind!=='wheel').map(c=>({address:current.base+offset(c.id),data:intended.slice(offset(c.id),offset(c.id)+8)})));
       try {
         await this.send(Uint8Array.of(7,9,0x41,0,0,0,0,0)); await this.wait(200);
         for(const block of blocks) {

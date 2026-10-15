@@ -1,5 +1,5 @@
 import {K810,CONTROLS,KEY_GROUPS,CONFIG_SIZE,keyLabel,offset,diffSettings,settingsOnly,backupOf,parseBackup,
-  WHEEL_ACTIONS,wheelLabel,wheelValue,setWheel} from './protocol.mjs';
+  WHEEL_ACTIONS,wheelLabel,wheelValue,setWheel} from './protocol.mjs?v=20261015-control-replay';
 
 const $=id=>document.getElementById(id);
 const RECOVERY_KEY='mkespn-k810:recovery:v1';
