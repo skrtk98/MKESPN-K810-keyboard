@@ -2,6 +2,9 @@
 
 解析日: 2026-10-15。静的解析と、ユーザーが接続した実機での読み書き確認。
 
+メディア・照明操作と、キーボード／マウスマクロの保存形式・追加検証は [MACROS.md](MACROS.md) を参照。
+通常設定の248バイトバックアップに加え、マクロ操作ではEEPROM全8,192バイトをバックアップ・照合する。
+
 ## Sources and reproducibility
 
 - [参考分解記事](https://kurihara.hatenadiary.jp/entry/MKESPN_K810_keyboard): Instant K201とAT24C64Nの記載。

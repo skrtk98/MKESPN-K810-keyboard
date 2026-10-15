@@ -47,12 +47,15 @@ configuration collection is separately accessible.
 
 ## Write boundaries and recovery
 
-- UI edits and imports affect only the 16 exposed control bytes and the wheel
-  assignment byte at configuration offset `0x20`.
+- Ordinary UI edits affect the 16 exposed control bytes and the wheel assignment
+  byte at configuration offset `0x20`. Macro saves also write the descriptor table
+  and payload region. Full-backup restoration restores the 160-byte key table,
+  wheel byte and macro region; RGB, mode and reserved regions remain unchanged.
 - Each changed column is written as its original 8-byte block with the other
   seven bytes preserved. The wheel's two nibbles are combined into one single-byte
   write, preserving the opposite direction when only one changes. RGB settings,
-  wheel matrix columns, macros and configuration headers cannot be edited.
+  wheel matrix columns and configuration headers cannot be edited by ordinary
+  key edits. Macro writes have a separate byte-level boundary guard.
 - Every nonempty save first replays the current eight-byte control block at
   `base + 0`, even though its bytes are unchanged. The original Apply handler
   writes this block after `07 09 41`. Omitting it left the saved wheel assignments
@@ -63,7 +66,10 @@ configuration collection is separately accessible.
   configurators; locks cannot coordinate with native programs or other origins.
 - Save a SHA-256 checked backup to localStorage **before** EEPROM commits. If
   storage is unavailable/full, abort. One latest recovery backup is kept.
-- Read back and compare the complete 248-byte region after writing.
+- Read back and compare the complete 248-byte region after ordinary writes.
+  Macro saves and full-backup restoration first capture all 8,192 EEPROM bytes,
+  save recovery data, check every proposed write block again, and verify the
+  entire EEPROM afterward. This takes several minutes over the byte-read protocol.
 - After reads and writes, send the original application's full configuration
   finalization (`07 18 11`, wait 10ms, `07 18 00`, `07 20`, wait 10ms).
   The block-local `18 01` alone did not reliably resume physical input in testing.
@@ -71,6 +77,9 @@ configuration collection is separately accessible.
 - Backups are compatible with the Python `mkespn-k810-config-v1` format. The Web
   backup has an empty `metadata_hex` and an additional `header_hex`, since the
   variable-length native metadata request is unavailable.
+  Optional `eeprom_hex` and `eeprom_sha256` fields carry a full EEPROM snapshot.
+  Imports are limited to 64 KiB and both hashes and configuration consistency
+  are checked. Legacy backups cannot restore new macro references without payloads.
 - Browser storage belongs to the HTTPS origin and may be removed by the browser.
   Download backups for durable recovery. Same-model devices have no useful
   serial number, so users must keep backups associated with the original unit.
@@ -92,7 +101,7 @@ it has not undergone an independent accessibility conformance audit.
 
 ## Verification on 2026-10-15
 
-- Node tests: fifteen passing cases, including original-app x86 packet fixtures,
+- Node tests: twenty passing cases, including original-app x86 packet fixtures,
   report-ID handling, header validation, stale snapshots, storage failure,
   exclusive operation cleanup and backup integrity.
 - Desktop Chrome on the user's PC: authorized `USB Keyboard`, read configuration
@@ -111,8 +120,13 @@ it has not undergone an independent accessibility conformance audit.
 - WebHID UI: changed both wheel directions from `10` to `23` in one commit and
   restored `10`; both saves passed the complete 248-byte readback comparison.
 
-Individual physical key assignment events, other OSes,
-and other hardware/firmware versions are not part of this verification.
+The extended action and macro implementation is described in [MACROS.md](MACROS.md).
+Python has sixteen passing tests. The original x86 mapper and serializer provide
+reference vectors for 26 menu choices and nine macro examples, including movement,
+long delay and repetition modes. Physical tests confirmed Ctrl+F13 press/release,
+volume-up and LED-mode switching. LED toggle did not react on this unit.
+Other individual actions, sustained repetition, other OSes and firmware versions
+are not established by these tests.
 
 ## Reinvestigation of inactive wheel settings
 

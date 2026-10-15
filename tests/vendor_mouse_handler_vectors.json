@@ -1,0 +1,89 @@
+{
+  "source_sha256": "ef79b5e0ad1786dd682bc8ed1dad4626627c0518639ec67a702088d6322b8e36",
+  "cases": [
+    {
+      "button": "left",
+      "down": true,
+      "command_id": "0x8027",
+      "menu_path": [
+        "\u5b8f\u7f16\u8f91",
+        "Insert before",
+        "Left button",
+        "\u2193"
+      ],
+      "entry": "0x4170f0",
+      "code": 241,
+      "event_type": 1
+    },
+    {
+      "button": "left",
+      "down": false,
+      "command_id": "0x8028",
+      "menu_path": [
+        "\u5b8f\u7f16\u8f91",
+        "Insert before",
+        "Left button",
+        "\u2191"
+      ],
+      "entry": "0x422d10",
+      "code": 241,
+      "event_type": 2
+    },
+    {
+      "button": "right",
+      "down": true,
+      "command_id": "0x8029",
+      "menu_path": [
+        "\u5b8f\u7f16\u8f91",
+        "Insert before",
+        "Right button",
+        "\u2193"
+      ],
+      "entry": "0x422dd0",
+      "code": 243,
+      "event_type": 1
+    },
+    {
+      "button": "right",
+      "down": false,
+      "command_id": "0x802a",
+      "menu_path": [
+        "\u5b8f\u7f16\u8f91",
+        "Insert before",
+        "Right button",
+        "\u2191"
+      ],
+      "entry": "0x422e10",
+      "code": 243,
+      "event_type": 2
+    },
+    {
+      "button": "middle",
+      "down": true,
+      "command_id": "0x802b",
+      "menu_path": [
+        "\u5b8f\u7f16\u8f91",
+        "Insert before",
+        "Middle button",
+        "\u2193"
+      ],
+      "entry": "0x422d50",
+      "code": 242,
+      "event_type": 1
+    },
+    {
+      "button": "middle",
+      "down": false,
+      "command_id": "0x802c",
+      "menu_path": [
+        "\u5b8f\u7f16\u8f91",
+        "Insert before",
+        "Middle button",
+        "\u2191"
+      ],
+      "entry": "0x422d90",
+      "code": 242,
+      "event_type": 2
+    }
+  ]
+}

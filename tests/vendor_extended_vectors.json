@@ -1,0 +1,307 @@
+{
+  "source_sha256": "ef79b5e0ad1786dd682bc8ed1dad4626627c0518639ec67a702088d6322b8e36",
+  "repeat_buttons": [
+    {
+      "button": 10,
+      "mode": 2
+    },
+    {
+      "button": 11,
+      "mode": 1
+    },
+    {
+      "button": 12,
+      "mode": 0
+    }
+  ],
+  "actions": [
+    {
+      "label": "Play/Pause",
+      "unique_index": 0,
+      "code": 201
+    },
+    {
+      "label": "Vol-",
+      "unique_index": 1,
+      "code": 202
+    },
+    {
+      "label": "Vol+",
+      "unique_index": 2,
+      "code": 203
+    },
+    {
+      "label": "Previous",
+      "unique_index": 3,
+      "code": 205
+    },
+    {
+      "label": "Next",
+      "unique_index": 4,
+      "code": 204
+    },
+    {
+      "label": "Player",
+      "unique_index": 5,
+      "code": 206
+    },
+    {
+      "label": "Mail",
+      "unique_index": 6,
+      "code": 207
+    },
+    {
+      "label": "WWW Forward",
+      "unique_index": 7,
+      "code": 208
+    },
+    {
+      "label": "WWW Stop",
+      "unique_index": 8,
+      "code": 209
+    },
+    {
+      "label": "WWW Back",
+      "unique_index": 9,
+      "code": 210
+    },
+    {
+      "label": "WWW Refresh",
+      "unique_index": 10,
+      "code": 211
+    },
+    {
+      "label": "WWW Research",
+      "unique_index": 11,
+      "code": 212
+    },
+    {
+      "label": "WWW Favorite",
+      "unique_index": 12,
+      "code": 213
+    },
+    {
+      "label": "Mute",
+      "unique_index": 13,
+      "code": 214
+    },
+    {
+      "label": "My Computer",
+      "unique_index": 14,
+      "code": 215
+    },
+    {
+      "label": "Stop",
+      "unique_index": 15,
+      "code": 216
+    },
+    {
+      "label": "Calculator",
+      "unique_index": 16,
+      "code": 217
+    },
+    {
+      "label": "Web Browser",
+      "unique_index": 17,
+      "code": 218
+    },
+    {
+      "label": "Full-key Locked",
+      "unique_index": 18,
+      "code": 243
+    },
+    {
+      "label": "Backlight Mode Switch",
+      "unique_index": 19,
+      "code": 233
+    },
+    {
+      "label": "Backlight Color Switch",
+      "unique_index": 20,
+      "code": 232
+    },
+    {
+      "label": "Speed +",
+      "unique_index": 21,
+      "code": 236
+    },
+    {
+      "label": "Speed -",
+      "unique_index": 22,
+      "code": 237
+    },
+    {
+      "label": "Brightness +",
+      "unique_index": 23,
+      "code": 234
+    },
+    {
+      "label": "Brightness -",
+      "unique_index": 24,
+      "code": 235
+    },
+    {
+      "label": "Backlight On/Off",
+      "unique_index": 25,
+      "code": 240
+    }
+  ],
+  "macros": [
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "key-down",
+            "code": 4
+          },
+          {
+            "type": "key-up",
+            "code": 4
+          }
+        ]
+      },
+      "descriptor": "0702400200",
+      "payload": "0100810401040000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "mouse-down",
+            "code": 241
+          },
+          {
+            "type": "mouse-up",
+            "code": 241
+          }
+        ]
+      },
+      "descriptor": "0702400200",
+      "payload": "010081f101f10000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "scroll",
+            "steps": 1
+          },
+          {
+            "type": "scroll",
+            "steps": -3
+          }
+        ]
+      },
+      "descriptor": "0702400200",
+      "payload": "010001f7010001f7fd00000000000000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "move",
+            "x": -20,
+            "y": 10
+          },
+          {
+            "type": "move",
+            "x": 20,
+            "y": -10
+          }
+        ]
+      },
+      "descriptor": "0702400200",
+      "payload": "010001f6ecff0a0001f61400f6ff0000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "delay",
+            "delay": 10000
+          }
+        ]
+      },
+      "descriptor": "070a400200",
+      "payload": "01006b007f007f007f007f007f007f007f007f007f000000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "key-down",
+            "code": 224
+          },
+          {
+            "type": "key-down",
+            "code": 6
+          },
+          {
+            "type": "key-up",
+            "code": 6
+          },
+          {
+            "type": "key-up",
+            "code": 224
+          }
+        ]
+      },
+      "descriptor": "0704400200",
+      "payload": "010081e08106010601e0000000000000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "key-down",
+            "code": 4
+          },
+          {
+            "type": "key-up",
+            "code": 4
+          }
+        ],
+        "mode": "repeat",
+        "repeat": 3
+      },
+      "descriptor": "0702400200",
+      "payload": "0300810401040000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "key-down",
+            "code": 4
+          },
+          {
+            "type": "key-up",
+            "code": 4
+          }
+        ],
+        "mode": "while-held",
+        "repeat": 3
+      },
+      "descriptor": "0782400200",
+      "payload": "0100810401040000"
+    },
+    {
+      "spec": {
+        "events": [
+          {
+            "type": "key-down",
+            "code": 4
+          },
+          {
+            "type": "key-up",
+            "code": 4
+          }
+        ],
+        "mode": "until-click",
+        "repeat": 3
+      },
+      "descriptor": "0702408200",
+      "payload": "0100810401040000"
+    }
+  ]
+}

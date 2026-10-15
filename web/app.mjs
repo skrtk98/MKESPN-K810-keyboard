@@ -1,33 +1,132 @@
 import {K810,CONTROLS,KEY_GROUPS,CONFIG_SIZE,keyLabel,offset,diffSettings,settingsOnly,backupOf,parseBackup,
-  WHEEL_ACTIONS,wheelLabel,wheelValue,setWheel} from './protocol.mjs?v=20261015-control-replay';
+  WHEEL_ACTIONS,wheelLabel,wheelValue,setWheel} from './protocol.mjs?v=20261015-feedback';
+import {compileMacro,decodeMacro,macroKey,MACRO_CODES} from './macros.mjs?v=20261015-feedback';
+import {LIGHT_MODES,decodeLight,setLight} from './lighting.mjs?v=20261015-feedback';
+import {LIBRARY_KEY,emptyLibrary,parseLibrary,persistLibrary} from './library.mjs?v=20261015-feedback';
+import {recordedKey,MacroRecorder} from './recording.mjs?v=20261015-feedback';
 
 const $=id=>document.getElementById(id);
 const RECOVERY_KEY='mkespn-k810:recovery:v1';
 let session=null, snapshot=null, draft=null, selected='kp1', demo=false, busy=false, uncertain=false, recoveryDoc=null;
 const keyButtons=new Map();
+const pendingMacros=new Map();let restoreImage=null;
+let pendingLight={};
+let categoryKey=null,categoryCode=null,chosenCategory=null;
+let macroRows=[{type:'key-down',key:'a',delay:8},{type:'key-up',key:'a',delay:8}];
+const pageLinks=Array.from(document.querySelectorAll('[data-page]'));
+const menu=$('mobile-navigation'),menuButton=$('menu-open');
+function closeMenu({restoreFocus=true}={}) {
+  if(menu.open)menu.close();menuButton.setAttribute('aria-expanded','false');
+  if(restoreFocus)menuButton.focus();
+}
+function selectSettingsTab(id,{focus=false}={}) {
+  if(!['keys','light','macro','backup','help'].includes(id))id='keys';
+  document.querySelectorAll('.settings-panel').forEach(panel=>panel.hidden=panel.id!==`panel-${id}`);
+  for(const link of pageLinks) {
+    const active=link.dataset.page===id;
+    if(active){link.setAttribute('aria-current','page');link.setAttribute('data-current','');}
+    else {link.removeAttribute('aria-current');link.removeAttribute('data-current');}
+  }
+  $('mobile-page-name').textContent=pageLinks.find(link=>link.dataset.page===id).textContent.trim();
+  if(id!=='macro'&&recording)endRecording();
+  if(focus)$(`panel-${id}`).focus();
+}
+for(const link of pageLinks)link.addEventListener('click',event=>{
+  event.preventDefault();const wasOpen=menu.open;
+  closeMenu({restoreFocus:false});selectSettingsTab(link.dataset.page,{focus:wasOpen});
+  history.replaceState(null,'',`#page-${link.dataset.page}`);
+});
+menuButton.addEventListener('click',()=>{menuButton.setAttribute('aria-expanded','true');menu.showModal();$('menu-close').focus();});
+$('menu-close').addEventListener('click',()=>closeMenu());
+menu.addEventListener('cancel',()=>{menuButton.setAttribute('aria-expanded','false');});
+menu.addEventListener('close',()=>menuButton.setAttribute('aria-expanded','false'));
+const mobileLayout=matchMedia('(max-width:700px)');
+mobileLayout.addEventListener('change',event=>{if(!event.matches)closeMenu({restoreFocus:false});});
+window.addEventListener('hashchange',()=>selectSettingsTab(location.hash.replace('#page-','')));
+$('edit-key-macro').addEventListener('click',()=>selectSettingsTab('macro',{focus:true}));
+document.querySelector('.roller').addEventListener('click',event=>{event.preventDefault();setKeyView('wheel');$('wheel-settings').scrollIntoView({block:'nearest'});$('wheel-up').focus();});
+for(const [id,label] of CONTROLS)$('macro-key-select').add(new Option(label,id));
+$('macro-key-select').addEventListener('change',()=>{selected=$('macro-key-select').value;render();});
+function setKeyView(view) {
+  $('workspace').dataset.view=view;
+  document.querySelectorAll('[data-key-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.keyView===view)));
+}
+document.querySelectorAll('[data-key-view]').forEach(button=>button.addEventListener('click',()=>setKeyView(button.dataset.keyView)));
 
-function message(text,type='info') { $('status').textContent=text; $('status').className=`notice ${type}`; }
+function changesNow() {
+  if(!snapshot) return [];
+  const changes=diffSettings(snapshot.data,draft).filter(c=>!pendingMacros.has(c.id));
+  for(const [id,spec] of pendingMacros) changes.push({kind:'macro',id,label:CONTROLS.find(c=>c[0]===id)[1],before:keyLabel(snapshot.data[offset(id)]),after:`マクロ（${spec.events.length}行）`});
+  if(restoreImage) changes.push({kind:'macro',label:'保存済みマクロ領域',before:'本体の設定',after:'完全バックアップから復元'});
+  if(Object.keys(pendingLight).length) {
+    const after=setLight(snapshot.data,pendingLight);
+    if(!after.every((v,i)=>v===snapshot.data[i]))changes.push({kind:'light',label:'照明',before:lightSummary(snapshot.data),after:lightSummary(after)});
+  }
+  return changes;
+}
+
+
+function message(text,type='info',title) {
+  const banner=$('status'),error=type==='error',success=type==='success';
+  banner.dataset.type=error?'error':success?'success':type==='warning'?'warning':'info-1';
+  banner.setAttribute('role',error?'alert':'status');banner.setAttribute('aria-live',error?'assertive':'polite');
+  $('status-title').textContent=title??(error?'操作を完了できませんでした':success?'完了しました':busy?'処理中':'お知らせ');
+  $('status-text').textContent=text;banner.hidden=false;
+  $('status-icon-mark').setAttribute('d',success?'m17.6 9.6-7 7-4.3-4.3L7.7 11l2.9 2.9 5.7-5.6 1.3 1.4Z':error?'M11 6h2v8h-2zm0 10h2v2h-2z':'M11 10h2v7h-2zm0-4h2v2h-2z');
+  if(error) {
+    $('result-dialog-title').textContent=title??'操作を完了できませんでした';
+    $('result-dialog-text').textContent=text;
+    if(!$('result-dialog').open)$('result-dialog').showModal();
+    $('result-dialog-title').focus();
+  }
+}
+$('status-close').addEventListener('click',()=>{
+  $('status').hidden=true;
+  (mobileLayout.matches?$('menu-open'):document.querySelector('.desktop-navigation [aria-current]'))?.focus();
+});
+for(const id of ['result-dialog-close','result-dialog-ok'])$(id).addEventListener('click',()=>$('result-dialog').close());
+function renderKeyChoices(hasData) {
+  const code=hasData?draft[offset(selected)]:null;
+  if(categoryKey!==selected||categoryCode!==code||chosenCategory===null) {
+    categoryKey=selected;categoryCode=code;
+    chosenCategory=String(KEY_GROUPS.findIndex(([,keys])=>keys.some(([value])=>value===code)));
+    if(chosenCategory==='-1')chosenCategory=hasData?'current':'0';
+  }
+  const category=$('key-category'),choice=$('key-select');category.replaceChildren();
+  KEY_GROUPS.forEach(([label],i)=>category.add(new Option(label,String(i))));
+  if(code!==null&&!KEY_GROUPS.some(([,keys])=>keys.some(([value])=>value===code)))category.add(new Option('現在の特殊割り当て','current'));
+  category.value=chosenCategory;choice.replaceChildren();
+  const keys=chosenCategory==='current'?[[code,keyLabel(code)]]:KEY_GROUPS[Number(chosenCategory)][1];
+  if(!keys.some(([value])=>value===code)) {
+    const placeholder=new Option('選択してください','',true,true);placeholder.disabled=true;choice.add(placeholder);
+  }
+  keys.forEach(([value,label])=>choice.add(new Option(label,String(value))));
+  if(keys.some(([value])=>value===code))choice.value=String(code);
+  category.disabled=busy||!hasData||uncertain;choice.disabled=busy||!hasData||uncertain;
+}
+$('key-category').addEventListener('change',()=>{chosenCategory=$('key-category').value;renderKeyChoices(!!snapshot);});
+
 function render() {
-  const hasData=!!snapshot, changes=hasData?diffSettings(snapshot.data,draft):[];
+  const hasData=!!snapshot, changes=changesNow();
+  renderLight(hasData);
+  $('library-controls').disabled=busy;
+  $('status-close').disabled=busy;
   for(const [id,label] of CONTROLS) {
     const button=keyButtons.get(id), code=hasData?draft[offset(id)]:null;
-    button.querySelector('.key-name').textContent=code===null?'—':keyLabel(code);
+    button.querySelector('.key-name').textContent=code===null?'—':pendingMacros.has(id)?'マクロ（未保存）':keyLabel(code);
     button.setAttribute('aria-pressed',String(selected===id));
+    button.title=`${label}：${code===null?'未読み取り':keyLabel(code)}`;
     button.setAttribute('aria-label',`${label}、${code===null?'未読み取り':keyLabel(code)}${hasData&&code!==snapshot.data[offset(id)]?'、未保存':''}`);
-    button.classList.toggle('changed',hasData&&code!==snapshot.data[offset(id)]);
+    button.classList.toggle('changed',hasData&&(pendingMacros.has(id)||code!==snapshot.data[offset(id)]));
     button.disabled=busy;
   }
   $('editor-title').textContent=CONTROLS.find(c=>c[0]===selected)[1];
+  $('macro-target').textContent=CONTROLS.find(c=>c[0]===selected)[1];
+  $('macro-key-select').value=selected;$('macro-key-select').disabled=busy;
+  $('macro-controls').disabled=busy||!hasData||uncertain;
+  $('read-macro').disabled=busy||!session||uncertain||!MACRO_CODES.includes(snapshot?.data[offset(selected)]);
   $('current-key').textContent=hasData?keyLabel(snapshot.data[offset(selected)]):'未読み取り';
-  $('key-select').querySelectorAll('[data-extra]').forEach(o=>o.remove());
-  if(hasData) {
-    const code=draft[offset(selected)];
-    if(!Array.from($('key-select').options).some(o=>Number(o.value)===code)) {
-      const option=new Option(keyLabel(code),String(code)); option.dataset.extra='true'; $('key-select').add(option);
-    }
-    $('key-select').value=String(code);
-  }
-  $('key-select').disabled=busy||!hasData||uncertain;
+  renderKeyChoices(hasData);
   for(const direction of ['up','down']) {
     const select=$(`wheel-${direction}`);
     select.querySelectorAll('[data-extra]').forEach(o=>o.remove());
@@ -40,7 +139,7 @@ function render() {
     $(`wheel-current-${direction}`).textContent=hasData?wheelLabel(wheelValue(snapshot.data,direction)):'未読み取り';
   }
   $('wheel-swap').disabled=busy||!hasData||uncertain||['up','down'].some(d=>!WHEEL_ACTIONS.some(a=>a[0]===wheelValue(draft,d)));
-  $('revert-key').disabled=busy||!hasData||draft[offset(selected)]===snapshot?.data[offset(selected)];
+  $('revert-key').disabled=busy||!hasData||(!pendingMacros.has(selected)&&draft[offset(selected)]===snapshot?.data[offset(selected)]);
   $('apply').disabled=busy||demo||!session||!changes.length||uncertain;
   $('reset').disabled=busy||!changes.length;
   $('reload').disabled=busy||!session;
@@ -52,12 +151,11 @@ function render() {
   $('disconnect').hidden=!session;
   $('disconnect').disabled=busy;
   $('workspace').setAttribute('aria-busy',String(busy));
-  $('mode-badge').textContent=demo?'デモ · 本体には保存されません':session?'実機の設定':'プレビュー';
   $('change-count').textContent=changes.length?`${changes.length}件の変更`:'変更なし';
   $('no-changes').hidden=changes.length>0;
   $('changes').replaceChildren(...changes.map(change=>{
     const li=document.createElement('li');
-    const label=change.kind==='wheel'?wheelLabel:keyLabel;
+    const label=['macro','light'].includes(change.kind)?v=>v:change.kind==='wheel'?wheelLabel:keyLabel;
     for(const [tag,text] of [['span',change.label],['span',label(change.before)],['span','→'],['strong',label(change.after)]]) {
       const item=document.createElement(tag); item.textContent=text; li.append(item);
     }
@@ -86,7 +184,7 @@ function download(doc,name) {
   const link=document.createElement('a'); link.href=url; link.download=name; link.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function setSnapshot(value) { snapshot=value; draft=value.data.slice(); uncertain=false; }
+function setSnapshot(value) { chosenCategory=null;snapshot=value; draft=value.data.slice(); uncertain=false;pendingMacros.clear();restoreImage=null;pendingLight={}; }
 async function reload() {
   message('本体の設定を読み取っています…');
   setSnapshot(await usbLock(()=>session.exclusive(()=>session.snapshot())));
@@ -98,14 +196,9 @@ for(const [id,label] of CONTROLS) {
   button.setAttribute('aria-pressed','false');
   const name=document.createElement('span'); name.className='key-name';
   const position=document.createElement('span'); position.className='key-position'; position.textContent=label;
-  button.append(name,position); button.addEventListener('click',()=>{selected=id;render();});
+  button.append(name,position); button.addEventListener('click',()=>{selected=id;render();setKeyView('key');});
   (CONTROLS.findIndex(c=>c[0]===id)<12?$('keypad'):$('stick')).append(button);
   keyButtons.set(id,button);
-}
-for(const [label,keys] of KEY_GROUPS) {
-  const group=document.createElement('optgroup'); group.label=label;
-  for(const [code,name] of keys) group.append(new Option(name,String(code)));
-  $('key-select').append(group);
 }
 for(const direction of ['up','down']) {
   const select=$(`wheel-${direction}`);
@@ -116,9 +209,9 @@ $('wheel-swap').addEventListener('click',()=>{
   const up=wheelValue(draft,'up'),down=wheelValue(draft,'down');
   draft=setWheel(setWheel(draft,'up',down),'down',up);render();
 });
-$('key-select').addEventListener('change',()=>{if(!busy&&draft) {draft[offset(selected)]=Number($('key-select').value);render();}});
-$('revert-key').addEventListener('click',()=>{draft[offset(selected)]=snapshot.data[offset(selected)];render();});
-$('reset').addEventListener('click',()=>{draft=snapshot.data.slice();render();message('未保存の変更をすべて取り消しました。');});
+$('key-select').addEventListener('change',()=>{if(!busy&&draft) {pendingMacros.delete(selected);draft[offset(selected)]=Number($('key-select').value);render();}});
+$('revert-key').addEventListener('click',()=>{pendingMacros.delete(selected);draft[offset(selected)]=snapshot.data[offset(selected)];render();});
+$('reset').addEventListener('click',()=>{pendingMacros.clear();restoreImage=null;pendingLight={};draft=snapshot.data.slice();render();message('未保存の変更をすべて取り消しました。');});
 $('connect').addEventListener('click',()=>run(async()=>{
   let devices=(await navigator.hid.getDevices()).filter(d=>K810.matches(d));
   if(devices.length!==1) devices=await navigator.hid.requestDevice({filters:[{vendorId:0x30fa,productId:0x2350,usagePage:0xff01,usage:1}]});
@@ -133,7 +226,7 @@ $('connect').addEventListener('click',()=>run(async()=>{
     const dot=document.createElement('span'); dot.className='status-dot';
     $('device-status').append(dot,'接続済み · USB Keyboard（30FA:2350）');
     $('device-status').className='connected';
-    message('本体の設定を読み取りました。編集後に保存すると、本体の割り当てが変わります。','success');
+    message('本体の設定を読み取りました。編集後に保存すると、本体の割り当てが変わります。','success','接続しました');
   } catch(error) { if(device.opened) await device.close(); throw error; }
 }));
 $('disconnect').addEventListener('click',()=>run(async()=>{
@@ -145,6 +238,8 @@ $('demo').addEventListener('click',()=>{
   demo=true;
   const data=new Uint8Array(CONFIG_SIZE).fill(255);
   data[0x20]=0x10;
+  data.set(setLight(data,{mode:'breathing',brightness:6,speed:3,direction:0,symmetry:false,color_selection:0,colors_enabled:127,reaction_type:0,
+    colors:[[15,15,255],[255,15,15],[15,255,15],[15,255,255],[255,255,15],[255,15,255],[255,255,255]]}));
   const codes=[20,26,8,21,41,4,22,7,40,43,44,6,80,79,81,82];
   CONTROLS.forEach(([id],i)=>data[offset(id)]=codes[i]);
   setSnapshot({base:0xe0,header:Uint8Array.of(0xe1,0x1e,0xe0,0,0xf0,0x0f,0,0),data});
@@ -154,35 +249,252 @@ $('reload').addEventListener('click',()=>run(reload));
 $('apply').addEventListener('click',()=>run(async()=>{
   if(!session||demo||uncertain) throw new Error('本体へ接続し直してください。');
   message('設定を確認して保存しています。USBを抜かずにお待ちください…');
-  const result=await usbLock(()=>session.apply(snapshot,draft,async doc=>{
+  const saveRecovery=async doc=>{
     localStorage.setItem(RECOVERY_KEY,JSON.stringify(doc));
     recoveryDoc=doc;
-  }));
+  };
+  const result=await usbLock(()=>pendingMacros.size||restoreImage?
+    session.applyExtended(snapshot,draft,pendingMacros,restoreImage,saveRecovery,pendingLight):session.apply(snapshot,draft,saveRecovery,pendingLight));
   setSnapshot(result);
-  message('本体に保存し、読み戻しが一致することを確認しました。実際にキーを押して動作を確認してください。','success');
+  message('読み戻しが一致しました。実際に操作して動作を確認してください。','success','設定を保存しました');
 },{writing:true}));
-$('export').addEventListener('click',()=>run(async()=>download(await backupOf(snapshot),`k810-${new Date().toISOString().replace(/[:.]/g,'-')}.json`)));
+$('export').addEventListener('click',()=>run(async()=>{
+  message('マクロを含む完全バックアップを読み取っています…');
+  const value=await usbLock(()=>session.exclusive(()=>session.fullSnapshot()));
+  download(await backupOf(value),`k810-${new Date().toISOString().replace(/[:.]/g,'-')}.json`);
+  message('完全バックアップを保存しました。','success');
+}));
 $('recovery').addEventListener('click',()=>{if(recoveryDoc)download(recoveryDoc,'k810-before-save.json');});
 $('import').addEventListener('click',()=>$('backup-file').click());
 $('backup-file').addEventListener('change',()=>run(async()=>{
   const file=$('backup-file').files[0]; $('backup-file').value='';
   if(!file) return;
-  if(file.size>16384) throw new Error('バックアップファイルが大きすぎます。');
+  if(file.size>65536) throw new Error('バックアップファイルが大きすぎます。');
   const value=await parseBackup(JSON.parse(await file.text()));
   if(value.base!==snapshot.base) throw new Error('本体とバックアップの設定位置が一致しません。');
+  if(!value.image&&CONTROLS.some(([id])=>MACRO_CODES.includes(value.data[offset(id)])&&value.data[offset(id)]!==snapshot.data[offset(id)])) throw new Error('マクロの復元には完全バックアップが必要です。');
+  pendingMacros.clear();restoreImage=value.image??null;pendingLight={};
   draft=settingsOnly(snapshot.data,value.data);
   message('復元内容を読み込みました。変更一覧を確認し、「キーボードに保存する」で適用してください。');
 }));
-window.addEventListener('beforeunload',event=>{if(busy||(snapshot&&diffSettings(snapshot.data,draft).length)) {event.preventDefault();event.returnValue='';}});
+window.addEventListener('beforeunload',event=>{if(busy||changesNow().length) {event.preventDefault();event.returnValue='';}});
 navigator.hid?.addEventListener('disconnect',event=>{
   if(event.device!==session?.device) return;
   session=null;uncertain=true;
   $('device-status').textContent='USB接続が切れました';$('device-status').className='';
   message('USB接続が切れました。復元データを取得できます。再接続して本体の状態を確認してください。','error');render();
 });
+function lightSummary(data) {
+  const v=decodeLight(data),mode=LIGHT_MODES.find(m=>m[0]===v.mode)?.[1]??`モード${v.mode_code}`;
+  const colors=v.colors.map(rgb=>'#'+rgb.map(c=>c.toString(16).padStart(2,'0')).join('')).join('・');
+  return `${mode}／明るさ${v.brightness}／速度${v.speed}／方向${v.direction+1}／${v.symmetry?'対称':'非対称'}／色${v.color_selection||'循環'}／反応${v.reaction_type+1}／循環対象${v.colors_enabled.toString(2).padStart(7,'0')}／${colors}`;
+}
+function renderLight(hasData) {
+  $('light-controls').disabled=busy||!hasData||uncertain;
+  $('revert-light').disabled=busy||!Object.keys(pendingLight).length;
+  $('light-current').textContent=hasData?`本体：${lightSummary(snapshot.data)}`:'未読み取り';
+  if(!hasData)return;
+  const v=decodeLight(setLight(snapshot.data,pendingLight));
+  $('light-mode').querySelectorAll('[data-extra]').forEach(o=>o.remove());
+  if(v.mode==='unknown'){const o=new Option(`未対応のモード（${v.mode_code}）`,'unknown');o.dataset.extra='true';$('light-mode').add(o);}
+  $('light-mode').value=v.mode;
+  for(const [id,key] of [['light-brightness','brightness'],['light-speed','speed'],['light-direction','direction'],['light-reaction','reaction_type'],['light-color','color_selection']])$(id).value=String(v[key]);
+  $('light-symmetry').checked=v.symmetry;
+  v.colors.forEach((rgb,i)=>{$(`light-rgb-${i}`).value='#'+rgb.map(c=>c.toString(16).padStart(2,'0')).join('');$(`light-enabled-${i}`).checked=!!(v.colors_enabled&(1<<i));});
+}
+for(const [id,label] of LIGHT_MODES)$('light-mode').add(new Option(label,id));
+for(let i=0;i<7;i++) {
+  $('light-color').add(new Option(`色${i+1}だけを使用`,String(i+1)));
+  const label=document.createElement('label');
+  const enabled=document.createElement('input');enabled.type='checkbox';enabled.id=`light-enabled-${i}`;enabled.setAttribute('aria-label',`色${i+1}を循環に含める`);
+  const color=document.createElement('input');color.type='color';color.id=`light-rgb-${i}`;color.setAttribute('aria-label',`色${i+1}のRGB`);
+  label.append(enabled,`色${i+1}`,color);$('light-palette').append(label);
+}
+$('stage-light').addEventListener('click',()=>{
+  if(busy||!snapshot||uncertain)return;
+  try {
+    const fields={mode:$('light-mode').value,brightness:Number($('light-brightness').value),speed:Number($('light-speed').value),direction:Number($('light-direction').value),reaction_type:Number($('light-reaction').value),color_selection:Number($('light-color').value),symmetry:$('light-symmetry').checked,
+      colors_enabled:Array.from({length:7},(_,i)=>$(`light-enabled-${i}`).checked?1<<i:0).reduce((a,b)=>a|b,0),
+      colors:Array.from({length:7},(_,i)=>$(`light-rgb-${i}`).value.slice(1).match(/../g).map(s=>parseInt(s,16)))};
+    setLight(snapshot.data,fields);pendingLight=fields;render();message('照明設定を変更一覧に追加しました。保存すると本体に反映されます。');
+  }catch(e){message(e.message,'error');}
+});
+$('revert-light').addEventListener('click',()=>{pendingLight={};render();message('照明の未保存変更を取り消しました。');});
+
+let library=emptyLibrary();
+try {const stored=localStorage.getItem(LIBRARY_KEY);if(stored)library=parseLibrary(JSON.parse(stored));}catch {message('保存済みライブラリを読み込めませんでした。元データは保持しています。','error');}
+function selectedGroup() {return library.groups.find(g=>g.id===$('library-group').value);}
+function selectedMacro() {return selectedGroup()?.macros.find(m=>m.id===$('library-macro').value);}
+function renderLibrary(groupId=$('library-group').value,macroId=$('library-macro').value) {
+  $('library-group').replaceChildren(...library.groups.map(g=>new Option(g.name,g.id)));
+  if(library.groups.some(g=>g.id===groupId))$('library-group').value=groupId;
+  const group=selectedGroup();$('library-group-name').value=group?.name??'マイマクロ';
+  $('library-macro').replaceChildren(...(group?.macros??[]).map(m=>new Option(m.name,m.id)));
+  if(group?.macros.some(m=>m.id===macroId))$('library-macro').value=macroId;
+  const macro=selectedMacro();$('library-macro-name').value=macro?.name??'新しいマクロ';
+  for(const id of ['library-group-rename','library-group-delete','library-save-new'])$(id).disabled=!group;
+  for(const id of ['library-load','library-update','library-delete'])$(id).disabled=!macro;
+}
+function changeLibrary(action) {
+  try {
+    const draft=structuredClone(library),selection=action(draft)??{};
+    library=persistLibrary(localStorage,draft);renderLibrary(selection.group,selection.macro);
+    message('このブラウザに保存しました。本体の設定は変わりません。','success','ライブラリを保存しました');
+  }catch(error){message(`ライブラリを保存できませんでした：${error.message}`,'error');}
+}
+const editorSpec=()=>({mode:$('macro-mode').value,repeat:Number($('macro-repeat').value),events:structuredClone(macroRows)});
+$('library-group').addEventListener('change',()=>renderLibrary());
+$('library-macro').addEventListener('change',()=>{$('library-macro-name').value=selectedMacro()?.name??'';});
+$('library-group-new').addEventListener('click',()=>changeLibrary(draft=>{
+  const group={id:crypto.randomUUID(),name:$('library-group-name').value,macros:[]};draft.groups.push(group);return {group:group.id};
+}));
+$('library-group-rename').addEventListener('click',()=>changeLibrary(draft=>{draft.groups.find(g=>g.id===selectedGroup().id).name=$('library-group-name').value;}));
+$('library-group-delete').addEventListener('click',()=>changeLibrary(draft=>{draft.groups=draft.groups.filter(g=>g.id!==selectedGroup().id);}));
+for(const [id,update] of [['library-save-new',false],['library-update',true]])$(id).addEventListener('click',()=>changeLibrary(draft=>{
+  const group=draft.groups.find(g=>g.id===selectedGroup().id),macro={id:update?selectedMacro().id:crypto.randomUUID(),name:$('library-macro-name').value,spec:editorSpec()};
+  compileMacro(macro.spec);if(update)group.macros[group.macros.findIndex(m=>m.id===macro.id)]=macro;else group.macros.push(macro);
+  return {group:group.id,macro:macro.id};
+}));
+$('library-delete').addEventListener('click',()=>changeLibrary(draft=>{const group=draft.groups.find(g=>g.id===selectedGroup().id);group.macros=group.macros.filter(m=>m.id!==selectedMacro().id);}));
+$('library-load').addEventListener('click',()=>{
+  if(busy)return;
+  const macro=selectedMacro();if(!macro)return;
+  macroRows=structuredClone(macro.spec.events);$('macro-mode').value=macro.spec.mode??'repeat';$('macro-repeat').value=String(macro.spec.repeat??1);renderMacroRows();
+  message(`「${macro.name}」を編集画面へ読み込みました。「作成したマクロを割り当てる」で対象キーに追加できます。`);
+});
+$('library-export').addEventListener('click',()=>download(parseLibrary(library),'k810-macro-library.json'));
+$('library-import').addEventListener('click',()=>$('library-file').click());
+$('library-file').addEventListener('change',async()=>{
+  const file=$('library-file').files[0];$('library-file').value='';if(!file||busy)return;
+  try {
+    if(file.size>1048576)throw new Error('ライブラリファイルは1MiBまでです。');
+    const imported=parseLibrary(JSON.parse(await file.text()));
+    changeLibrary(draft=>{for(const group of imported.groups)draft.groups.push({...group,id:crypto.randomUUID(),macros:group.macros.map(m=>({...m,id:crypto.randomUUID()}))});});
+  }catch(error){message(error.message,'error');}
+});
+renderLibrary();
+
+function stage(spec) {
+  if(busy||!snapshot||uncertain) return;
+  try {
+    compileMacro(spec);pendingMacros.set(selected,structuredClone(spec));
+    message(`${CONTROLS.find(c=>c[0]===selected)[1]}のマクロを変更一覧に追加しました。保存すると本体に反映されます。`,'success');render();
+  } catch(error) {message(error.message,'error');}
+}
+$('stage-shortcut').addEventListener('click',()=>{
+  try {
+    const keys=$('shortcut-input').value.split('+').map(k=>macroKey(k.trim()));
+    stage({events:[...keys.map(key=>({type:'key-down',key})),...keys.toReversed().map(key=>({type:'key-up',key}))]});
+  } catch(error) {message(error.message,'error');}
+});
+$('stage-mouse').addEventListener('click',()=>{
+  const action=$('mouse-action').value;
+  stage({events:action.startsWith('scroll-')?[{type:'scroll',steps:action==='scroll-up'?1:-1}]:[{type:'mouse-down',button:action},{type:'mouse-up',button:action}]});
+});
+function renderMacroRows() {
+  const container=$('macro-rows');container.replaceChildren();
+  macroRows.forEach((event,i)=>{
+    const row=document.createElement('div');row.className='macro-row';
+    const field=(name,control)=>{
+      const label=document.createElement('label');label.textContent=`${i+1}. ${name}`;
+      control.setAttribute('aria-label',`${i+1}行目 ${name}`);label.append(control);row.append(label);return control;
+    };
+    const type=document.createElement('select');type.className='dads-select__select';type.dataset.size='md';
+    for(const [value,label] of [['key-down','キーを押す'],['key-up','キーを離す'],['mouse-down','マウスを押す'],['mouse-up','マウスを離す'],['scroll','スクロール'],['move','ポインター移動'],['led','照明シーケンス'],['delay','待機']]) type.add(new Option(label,value));
+    type.value=event.type;type.addEventListener('change',()=>{macroRows[i]={type:type.value,key:'a',button:'left',steps:1,x:0,y:0,delay:event.delay??8,...(type.value==='led'?{behavior:0,sequence:[{mode:'constant',color:1,duration_ms:1000}]}:{})};renderMacroRows();});field('操作',type);
+    if(event.type.startsWith('key-')) {
+      const select=document.createElement('select');select.className='dads-select__select';select.dataset.size='md';
+      for(const [name,keys] of KEY_GROUPS) {
+        const group=document.createElement('optgroup');group.label=name;
+        for(const [code,label] of keys) if((code>=4&&code<=0xa4)||(code>=0xe0&&code<=0xe7)) group.append(new Option(label,`0x${code.toString(16)}`));
+        if(group.children.length) select.append(group);
+      }
+      select.value=`0x${macroKey(event.key).toString(16)}`;select.addEventListener('change',()=>event.key=select.value);field('キー',select);
+    } else if(event.type.startsWith('mouse-')) {
+      const select=document.createElement('select');select.className='dads-select__select';select.dataset.size='md';
+      for(const [value,label] of [['left','左ボタン'],['right','右ボタン'],['middle','中ボタン']]) select.add(new Option(label,value));
+      select.value=event.button;select.addEventListener('change',()=>event.button=select.value);field('ボタン',select);
+    }
+    for(const [property,label,min,max] of event.type==='scroll'?[['steps','スクロール量（上が＋）',-127,127]]:event.type==='move'?[['x','横移動量（右が＋）',-32767,32767],['y','縦移動量（下が＋）',-32767,32767]]:[]) {
+      const input=document.createElement('input');input.type='number';input.min=String(min);input.max=String(max);input.value=String(event[property]);input.addEventListener('input',()=>event[property]=Number(input.value));field(label,input);
+    }
+    if(event.type==='led') {
+      const sequence=document.createElement('fieldset');sequence.className='led-sequence';
+      const legend=document.createElement('legend');legend.textContent=`${i+1}行目の照明（本体の7色を使用）`;sequence.append(legend);
+      if(event.behavior) {const note=document.createElement('p');note.textContent=`実行方式${event.behavior}を保持しています。この方式は実機未検証です。`;sequence.append(note);}
+      event.sequence.forEach((step,j)=>{
+        const line=document.createElement('div');line.className='macro-row';
+        const add=(label,control)=>{const wrap=document.createElement('label');wrap.textContent=`${j+1}. ${label}`;control.setAttribute('aria-label',`${i+1}行目 照明${j+1} ${label}`);wrap.append(control);line.append(wrap);};
+        const mode=document.createElement('select');mode.className='dads-select__select';mode.dataset.size='md';LIGHT_MODES.forEach(([value,label])=>mode.add(new Option(label,value)));mode.value=step.mode;mode.addEventListener('change',()=>step.mode=mode.value);add('モード',mode);
+        const color=document.createElement('select');color.className='dads-select__select';color.dataset.size='md';color.add(new Option('色循環','0'));for(let c=1;c<=7;c++)color.add(new Option(`色${c}`,String(c)));color.value=String(step.color??0);color.addEventListener('change',()=>step.color=Number(color.value));add('色',color);
+        const duration=document.createElement('input');duration.type='number';duration.min='100';duration.max='25500';duration.step='100';duration.value=String(step.duration_ms??1000);duration.addEventListener('input',()=>step.duration_ms=Number(duration.value));add('持続時間（ms）',duration);
+        for(const [label,delta] of [['前へ',-1],['後へ',1],['削除',0]]) {
+          const button=document.createElement('button');button.className='dads-button';button.dataset.size='sm';button.dataset.type='text';button.textContent=label;button.setAttribute('aria-label',`${i+1}行目 照明${j+1}を${label}`);button.disabled=delta?j+delta<0||j+delta>=event.sequence.length:event.sequence.length===1;
+          button.addEventListener('click',()=>{if(delta)[event.sequence[j],event.sequence[j+delta]]=[event.sequence[j+delta],event.sequence[j]];else event.sequence.splice(j,1);renderMacroRows();});line.append(button);
+        }
+        sequence.append(line);
+      });
+      const add=document.createElement('button');add.className='dads-button';add.dataset.size='sm';add.dataset.type='outline';add.textContent='照明の段階を追加';add.disabled=event.sequence.length>=16;add.addEventListener('click',()=>{event.sequence.push({mode:'constant',color:1,duration_ms:1000});renderMacroRows();});sequence.append(add);row.append(sequence);
+    }
+    const delay=document.createElement('input');delay.type='number';delay.min='8';delay.max='10000';delay.step='8';delay.value=String(event.delay??8);delay.addEventListener('input',()=>event.delay=Number(delay.value));field('操作後の待機（ms）',delay);
+    const actions=document.createElement('div');actions.className='macro-row-actions';
+    for(const [label,delta] of [['上へ',-1],['下へ',1],['削除',0]]) {
+      const button=document.createElement('button');button.className='dads-button';button.dataset.size='sm';button.dataset.type='text';button.textContent=label;button.setAttribute('aria-label',`${i+1}行目を${label}`);
+      button.disabled=delta!==0&&(i+delta<0||i+delta>=macroRows.length);
+      button.addEventListener('click',()=>{if(delta) [macroRows[i],macroRows[i+delta]]=[macroRows[i+delta],macroRows[i]];else macroRows.splice(i,1);renderMacroRows();});actions.append(button);
+    }
+    row.append(actions);container.append(row);
+  });
+}
+$('macro-add').addEventListener('click',()=>{if(macroRows.length>=275){message('275行まで追加できます。','error');return;}macroRows.push({type:'delay',delay:8});renderMacroRows();});
+$('stage-macro').addEventListener('click',()=>stage({mode:$('macro-mode').value,repeat:Number($('macro-repeat').value),events:macroRows}));
+$('read-macro').addEventListener('click',()=>run(async()=>{
+  const target=selected;message('本体のマクロを読み取っています…');
+  const full=await usbLock(()=>session.exclusive(()=>session.fullSnapshot()));
+  if(!full.data.every((v,i)=>v===snapshot.data[i]))throw new Error('本体の設定が変わっています。再読み取りしてからお試しください。');
+  const spec=decodeMacro(full.image,full.base,offset(target));
+  macroRows=spec.events;$('macro-mode').value=spec.mode;$('macro-repeat').value=String(spec.repeat);renderMacroRows();
+  $('macro-rows').closest('details').open=true;
+  message('本体のマクロを編集画面へ読み込みました。変更を割り当てて保存するまで本体は変わりません。','success');
+}));
+renderMacroRows();
+let recording=null;
+function endRecording() {
+  if(!recording)return;
+  const active=recording;recording=null;$('record-start').disabled=false;$('record-stop').disabled=true;
+  try {
+    const rows=active.finish(performance.now());
+    if(rows.length){macroRows=rows;renderMacroRows();}
+    $('record-status').textContent=`${rows.length}件の操作を編集画面へ移しました。内容を確認してから割り当ててください。`;
+  }catch(error){message(error.message,'error');}
+}
+function recordOperation(event) {
+  if(!recording)return;
+  try {recording.append(event,performance.now());$('record-status').textContent=`記録中：${recording.events.length}件。Escで終了できます。`;}
+  catch(error){endRecording();message(error.message,'error');}
+}
+$('record-start').addEventListener('click',()=>{
+  if(busy)return;recording=new MacroRecorder();$('record-start').disabled=true;$('record-stop').disabled=false;$('record-status').textContent='記録中です。この欄で操作し、Escで終了してください。';$('record-area').focus();
+});
+$('record-stop').addEventListener('click',endRecording);$('record-area').addEventListener('blur',endRecording);
+for(const type of ['keydown','keyup'])$('record-area').addEventListener(type,event=>{
+  if(!recording)return;event.preventDefault();
+  if(event.code==='Escape'){if(type==='keydown')endRecording();return;}
+  const key=recordedKey(event.code);if(key===undefined){$('record-status').textContent=`このキーは自動記録に未対応です：${event.code}。編集画面で追加できます。`;return;}
+  if(type==='keydown'&&(event.repeat||recording.held.has(`key:${key}`)))return;
+  if(type==='keyup'&&!recording.held.has(`key:${key}`))return;
+  recordOperation({type:type==='keydown'?'key-down':'key-up',key});
+});
+for(const type of ['mousedown','mouseup'])$('record-area').addEventListener(type,event=>{
+  if(!recording)return;event.preventDefault();const button=['left','middle','right'][event.button];if(!button)return;
+  if(type==='mouseup'&&!recording.held.has(`mouse:${button}`))return;
+  recordOperation({type:type==='mousedown'?'mouse-down':'mouse-up',button});
+});
+$('record-area').addEventListener('wheel',event=>{if(recording){event.preventDefault();recordOperation({type:'scroll',steps:event.deltaY<0?1:-1});}},{passive:false});
+$('record-area').addEventListener('contextmenu',event=>event.preventDefault());
+selectSettingsTab(location.hash.replace('#page-',''));
 try { const saved=localStorage.getItem(RECOVERY_KEY); if(saved) {const doc=JSON.parse(saved);await parseBackup(doc);recoveryDoc=doc;} } catch { /* Corrupt local recovery never becomes a writable configuration. */ }
 if(!('hid' in navigator)||!window.isSecureContext) {
-  $('compatibility').hidden=false;
-  $('compatibility').textContent='この環境では実機に接続できません。PC版Chrome・EdgeでHTTPSのページを開いてください。デモはこのまま利用できます。';
+  message('PC版Chrome・EdgeでHTTPSのページを開いてください。デモはこのまま利用できます。','warning','実機接続に未対応の環境です');
 }
 render();

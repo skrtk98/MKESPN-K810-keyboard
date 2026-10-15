@@ -1,0 +1,1680 @@
+{
+  "source_sha256": "ef79b5e0ad1786dd682bc8ed1dad4626627c0518639ec67a702088d6322b8e36",
+  "cases": [
+    {
+      "fields": {
+        "mode_code": 0,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0310ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 1,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0311ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0312ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 3,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0313ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 4,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0314ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 5,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0315ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 6,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0316ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 7,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0317ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 8,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0318ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 9,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0319ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 10,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "031affff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 11,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "031bffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 12,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "031cffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 0,
+        "speed": 6,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "3612ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 1,
+        "speed": 5,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "2d12ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 2,
+        "speed": 4,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "2412ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 3,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "1b12ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 4,
+        "speed": 2,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "1212ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 5,
+        "speed": 1,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0912ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 6,
+        "speed": 0,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0012ffff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 8,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": true,
+        "color_selection": 3,
+        "colors_enabled": 85,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000080"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "03b8d5ff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 8,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 1,
+        "symmetry": true,
+        "color_selection": 3,
+        "colors_enabled": 85,
+        "reaction_type": 1,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000081"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "43b8d5ff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 8,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 2,
+        "symmetry": true,
+        "color_selection": 3,
+        "colors_enabled": 85,
+        "reaction_type": 2,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000082"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "83b8d5ff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 8,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 3,
+        "symmetry": true,
+        "color_selection": 3,
+        "colors_enabled": 85,
+        "reaction_type": 3,
+        "colors": [
+          [
+            255,
+            15,
+            15
+          ],
+          [
+            15,
+            255,
+            15
+          ],
+          [
+            15,
+            15,
+            255
+          ],
+          [
+            255,
+            255,
+            15
+          ],
+          [
+            255,
+            15,
+            255
+          ],
+          [
+            15,
+            255,
+            255
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800f1fff00f00f0f"
+        },
+        {
+          "write_address": 232,
+          "data": "00000ff000000083"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "c3b8d5ff2801d801"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "mode_code": 2,
+        "brightness": 6,
+        "speed": 3,
+        "direction": 0,
+        "symmetry": false,
+        "color_selection": 1,
+        "colors_enabled": 127,
+        "reaction_type": 0,
+        "colors": [
+          [
+            255,
+            239,
+            223
+          ],
+          [
+            207,
+            191,
+            175
+          ],
+          [
+            159,
+            143,
+            127
+          ],
+          [
+            111,
+            95,
+            79
+          ],
+          [
+            63,
+            47,
+            31
+          ],
+          [
+            15,
+            255,
+            239
+          ],
+          [
+            223,
+            207,
+            191
+          ]
+        ]
+      },
+      "blocks": [
+        {
+          "write_address": 224,
+          "data": "800211350468079b"
+        },
+        {
+          "write_address": 232,
+          "data": "0ace0df100240380"
+        },
+        {
+          "write_address": 240,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 248,
+          "data": "0312ffff2801d801"
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import {planMacro,restoreMacroImage,extendedBlocks,MACRO_CODES} from './macros.mjs?v=20261015-feedback';
+import {setLight,lightBlocks} from './lighting.mjs?v=20261015-feedback';
 export const CONFIG_SIZE = 248;
 export const WHEEL_OFFSET = 0x20;
 export const WHEEL_ACTIONS = [
@@ -37,8 +39,15 @@ export const KEY_GROUPS = [
   ['修飾キー', [[224,'左 Ctrl'],[225,'左 Shift'],[226,'左 Alt'],[227,'左 Windows / Command'],
     [228,'右 Ctrl'],[229,'右 Shift'],[230,'右 Alt'],[231,'右 Windows / Command']]],
   ['その他', [[0,'無効（出力なし）']]],
+  ['メディア・アプリ', [[0xc9,'再生／一時停止'],[0xca,'音量を下げる'],[0xcb,'音量を上げる'],
+    [0xcc,'次の曲'],[0xcd,'前の曲'],[0xce,'メディアプレーヤー'],[0xcf,'メール'],[0xd0,'ブラウザ 進む'],
+    [0xd1,'ブラウザ 停止'],[0xd2,'ブラウザ 戻る'],[0xd3,'ブラウザ 更新'],[0xd4,'ブラウザ 検索'],
+    [0xd5,'ブラウザ お気に入り'],[0xd6,'ミュート'],[0xd7,'マイコンピューター'],[0xd8,'再生を停止'],
+    [0xd9,'電卓'],[0xda,'ブラウザ ホーム']]],
+  ['照明操作', [[0xe8,'照明の色を切り替える'],[0xe9,'照明モードを切り替える'],[0xea,'照明を明るくする'],
+    [0xeb,'照明を暗くする'],[0xec,'照明速度を上げる'],[0xed,'照明速度を下げる'],[0xf0,'照明をオン／オフ']]],
 ];
-export const keyLabel = code => KEY_GROUPS.flatMap(g=>g[1]).find(k=>k[0]===code)?.[1] ?? `特殊キー 0x${code.toString(16).padStart(2,'0')}`;
+export const keyLabel = code => KEY_GROUPS.flatMap(g=>g[1]).find(k=>k[0]===code)?.[1] ?? (MACRO_CODES.includes(code)?`マクロ ${MACRO_CODES.indexOf(code)+1}`:`特殊キー 0x${code.toString(16).padStart(2,'0')}`);
 export const hex = bytes => Array.from(bytes, b=>b.toString(16).padStart(2,'0')).join('');
 export function fromHex(s) {
   if (typeof s !== 'string' || s.length % 2 || !/^[0-9a-f]*$/i.test(s)) throw new Error('バックアップのデータ形式が不正です。');
@@ -98,8 +107,10 @@ export async function checksum(data) {
   return hex(new Uint8Array(await crypto.subtle.digest('SHA-256',data)));
 }
 export async function backupOf(snapshot) {
-  return {format:'mkespn-k810-config-v1',created_utc:new Date().toISOString(),vendor_id:0x30fa,product_id:0x2350,
+  const doc={format:'mkespn-k810-config-v1',created_utc:new Date().toISOString(),vendor_id:0x30fa,product_id:0x2350,
     base:snapshot.base,metadata_hex:'',header_hex:hex(snapshot.header),data_hex:hex(snapshot.data),sha256:await checksum(snapshot.data)};
+  if(snapshot.image) {doc.eeprom_hex=hex(snapshot.image);doc.eeprom_sha256=await checksum(snapshot.image);}
+  return doc;
 }
 export async function parseBackup(doc) {
   if (doc?.format!=='mkespn-k810-config-v1' || doc.vendor_id!==0x30fa || doc.product_id!==0x2350 ||
@@ -108,7 +119,12 @@ export async function parseBackup(doc) {
   }
   const data=fromHex(doc.data_hex);
   if (data.length!==CONFIG_SIZE || await checksum(data)!==doc.sha256) throw new Error('バックアップのサイズまたはチェックサムが一致しません。');
-  return {base:doc.base,data};
+  let image;
+  if(doc.eeprom_hex!==undefined) {
+    image=fromHex(doc.eeprom_hex);
+    if(image.length!==8192||await checksum(image)!==doc.eeprom_sha256||!equal(image.slice(doc.base,doc.base+CONFIG_SIZE),data)) throw new Error('完全バックアップの照合に失敗しました。');
+  }
+  return {base:doc.base,data,image};
 }
 
 export class K810 {
@@ -174,18 +190,54 @@ export class K810 {
       try { await this.finishConfiguration(); } finally { this.active=false; }
     }
   }
-  async apply(snapshot,draft,saveRecovery) {
+  async fullSnapshot() {
+    try {
+      const image=await this.readRange(0,8192),header=image.slice(0xd0,0xd8),base=baseFromHeader(header);
+      const data=image.slice(base,base+CONFIG_SIZE);
+      if(new Set(data).size<3) throw new Error('設定データが空です。');
+      return {base,header,data,image};
+    } finally {await this.finishConfiguration();}
+  }
+  async applyExtended(snapshot,draft,macros,restoreImage,saveRecovery,lighting=null) {
     return this.exclusive(async()=>{
-      const intended=settingsOnly(snapshot.data,draft);
+      const current=await this.fullSnapshot();
+      if(current.base!==snapshot.base||!equal(current.data,snapshot.data)) throw new Error('本体が変更されています。再読み取りしてください。');
+      await saveRecovery(await backupOf(current));
+      let intended=restoreImage?restoreMacroImage(current.image,restoreImage,current.base):current.image.slice();
+      intended.set(settingsOnly(intended.slice(current.base,current.base+CONFIG_SIZE),draft),current.base);
+      if(lighting)intended.set(setLight(intended.slice(current.base,current.base+CONFIG_SIZE),lighting),current.base);
+      for(const [id,spec] of macros) intended=planMacro(intended,current.base,offset(id),spec).image;
+      const blocks=extendedBlocks(current.image,intended,current.base,!!lighting);
+      // Check every to-be-written byte again after the full read and backup.
+      for(const block of blocks) if(!equal(await this.read(block.address,block.data.length),current.image.slice(block.address,block.address+block.data.length))) throw new Error('保存対象が変更されています。再読み取りしてください。');
+      try {
+        await this.send(Uint8Array.of(7,9,0x41,0,0,0,0,0));await this.wait(200);
+        for(const block of blocks) {
+          const reports=writePackets(block.address,block.data);
+          for(const report of reports.slice(0,-2)) await this.send(report);
+          await this.wait(2);await this.send(reports.at(-2));await this.wait(10);await this.send(reports.at(-1));
+        }
+      } finally {await this.send(packet(0x11));await this.wait(10);await this.send(packet());}
+      const verified=await this.fullSnapshot();
+      if(!equal(verified.image,intended)) throw new Error('完全バックアップとの読み戻し照合が一致しません。保存前データから復元してください。');
+      return verified;
+    });
+  }
+  async apply(snapshot,draft,saveRecovery,lighting=null) {
+    return this.exclusive(async()=>{
+      let intended=settingsOnly(snapshot.data,draft);
+      const lightOffsets=lighting?lightBlocks(intended,setLight(intended,lighting)):[];
+      if(lighting)intended=setLight(intended,lighting);
       const changes=diffSettings(snapshot.data,intended);
-      if(!changes.length) return snapshot;
+      if(!changes.length&&!lightOffsets.length) return snapshot;
       // Re-read before writing: never overwrite another app/tab's changes.
       const current=await this.snapshot();
       if(current.base!==snapshot.base || !equal(current.data,snapshot.data)) throw new Error('本体の設定が変更されています。再読み取りして編集し直してください。');
       await saveRecovery(await backupOf(current)); // Failure MUST abort before EEPROM commits.
       // Replaying the current control block is required even when it has no
       // changed bytes. The original Apply handler writes it after 07/09/41.
-      const blocks=[{address:current.base,data:current.data.slice(0,8)}];
+      const blocks=[{address:current.base,data:intended.slice(0,8)}];
+      blocks.push(...lightOffsets.filter(a=>a!==0).map(a=>({address:current.base+a,data:intended.slice(a,a+8)})));
       if(current.data[WHEEL_OFFSET]!==intended[WHEEL_OFFSET]) blocks.push({address:current.base+WHEEL_OFFSET,data:intended.slice(WHEEL_OFFSET,WHEEL_OFFSET+1)});
       blocks.push(...changes.filter(c=>c.kind!=='wheel').map(c=>({address:current.base+offset(c.id),data:intended.slice(offset(c.id),offset(c.id)+8)})));
       try {

@@ -10,85 +10,185 @@
   <link rel="stylesheet" href="./vendor/dads/global.css">
   <link rel="stylesheet" href="./vendor/dads/button.css">
   <link rel="stylesheet" href="./vendor/dads/select.css">
-  <link rel="stylesheet" href="./style.css">
-  <script type="module" src="./app.mjs?v=20261015-control-replay"></script>
+  <link rel="stylesheet" href="./vendor/dads/horizontal-menu.css">
+  <link rel="stylesheet" href="./vendor/dads/hamburger-menu-button.css">
+  <link rel="stylesheet" href="./vendor/dads/menu-list.css">
+  <link rel="stylesheet" href="./vendor/dads/accordion.css">
+  <link rel="stylesheet" href="./vendor/dads/disclosure.css">
+  <link rel="stylesheet" href="./vendor/dads/notification-banner.css">
+  <link rel="stylesheet" href="./vendor/dads/modal-dialog.css">
+  <link rel="stylesheet" href="./style.css?v=20261015-feedback">
+  <script type="module" src="./app.mjs?v=20261015-feedback"></script>
 </head>
 <body>
   <a class="skip" href="#main">本文へ移動</a>
-  <header class="site-header"><div class="header-inner">
+  <header class="site-header"><div class="header-inner"><h1 class="visually-hidden">K810 キーボード設定</h1>
     <a href="./" class="wordmark"><svg width="32" height="24" viewBox="0 0 32 24" aria-hidden="true"><rect x="1" y="1" width="30" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 7h3m4 0h3m4 0h3M6 12h3m4 0h3m4 0h3M8 17h14" stroke="currentColor" stroke-width="2"/></svg> K810 <span>キーボード設定</span></a>
-    <a href="#guide">使い方</a>
-  </div></header>
-  <main id="main" class="container">
-    <div class="intro"><p class="eyebrow">MKESPN K810 · WebHID CONFIGURATOR</p>
-      <h1>キーの割り当てを変更</h1><p class="lead">いつもの操作を、手元の12キーに。<br>専用アプリなしで、キーボード本体に設定を保存できます。</p>
-    </div>
-    <noscript><p class="notice error">このツールの利用にはJavaScriptを有効にしてください。</p></noscript>
-    <div id="compatibility" class="notice" hidden></div>
     <section class="connection" aria-labelledby="connection-title">
-      <div><h2 id="connection-title">1. キーボードを接続</h2><p id="device-status"><span class="status-dot"></span>未接続</p><p class="muted">K810をUSBで接続し、ブラウザの選択画面で許可してください。</p></div>
+      <div><h2 id="connection-title">キーボードを接続</h2><p id="device-status"><span class="status-dot"></span>未接続</p><p class="muted">K810をUSBで接続し、ブラウザの選択画面で許可してください。</p></div>
       <div class="connect-actions"><button id="connect" class="dads-button" data-size="md" data-type="solid-fill">K810に接続する</button>
       <button id="demo" class="dads-button" data-size="sm" data-type="text">接続せずに試す</button>
       <button id="disconnect" class="dads-button" data-size="sm" data-type="text" hidden>切断する</button></div>
     </section>
-    <div id="status" class="notice" role="status" aria-live="polite">キーボードを接続すると、現在の設定を読み取ります。</div>
-    <div class="section-heading"><h2>2. キーを選んで編集</h2><span id="mode-badge" class="badge">プレビュー</span></div>
-    <p class="muted">図のキーを選び、右のメニューから出力するキーを指定してください。</p>
-    <div id="workspace" class="workspace" aria-busy="false">
+  </div></header>
+  <main id="main" class="container">
+    <div class="intro"><p class="eyebrow">MKESPN K810 · WebHID CONFIGURATOR</p>
+      <p class="lead">キー・ホイール・Light・マクロを、ひとつの画面から。<br>専用アプリなしで、キーボード本体に設定を保存できます。</p>
+    </div>
+    <noscript><p class="notice error">このツールの利用にはJavaScriptを有効にしてください。</p></noscript>
+    <div id="compatibility" class="notice" hidden></div>
+
+    <section id="status" class="dads-notification-banner app-notification" data-style="standard" data-type="info-1" role="status" aria-live="polite" hidden>
+      <h2 class="dads-notification-banner__heading"><svg class="dads-notification-banner__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path id="status-icon-mark" d="M11 10h2v7h-2zm0-4h2v2h-2z" fill="Canvas"/></svg><span id="status-title" class="dads-notification-banner__heading-text">お知らせ</span></h2>
+      <button id="status-close" class="dads-notification-banner__close" type="button" aria-label="通知を閉じる"><svg class="dads-notification-banner__close-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 18.6-1-1 5.5-5.6-5.6-5.6 1.1-1 5.6 5.5 5.6-5.6 1 1.1L13 12l5.6 5.6-1 1L12 13l-5.6 5.6Z" fill="currentColor"/></svg><span class="dads-notification-banner__close-label">閉じる</span></button>
+      <div class="dads-notification-banner__body"><p id="status-text"></p></div>
+    </section>
+    <h2 id="settings-title" class="visually-hidden">機器設定</h2>
+    <div class="settings-app">
+    <nav class="desktop-navigation" aria-label="機器設定"><ul class="dads-horizontal-menu">
+      <li class="dads-horizontal-menu__item"><a class="dads-horizontal-menu__item-inner" data-page="keys" href="#page-keys" aria-current="page"><span class="dads-horizontal-menu__label">キー・ホイール</span></a></li>
+      <li class="dads-horizontal-menu__item"><a class="dads-horizontal-menu__item-inner" data-page="light" href="#page-light"><span class="dads-horizontal-menu__label">Light</span></a></li>
+      <li class="dads-horizontal-menu__item"><a class="dads-horizontal-menu__item-inner" data-page="macro" href="#page-macro"><span class="dads-horizontal-menu__label">マクロ</span></a></li>
+      <li class="dads-horizontal-menu__item"><a class="dads-horizontal-menu__item-inner" data-page="backup" href="#page-backup"><span class="dads-horizontal-menu__label">バックアップ</span></a></li>
+      <li class="dads-horizontal-menu__item"><a class="dads-horizontal-menu__item-inner" data-page="help" href="#page-help"><span class="dads-horizontal-menu__label">使い方</span></a></li>
+    </ul></nav>
+    <button id="menu-open" class="dads-hamburger-menu-button mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-navigation"><svg class="dads-hamburger-menu-button__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18V16H21V18H3ZM3 13V11H21V13H3ZM3 8V6H21V8H3Z" fill="currentColor"/></svg>メニュー<span id="mobile-page-name">キー・ホイール</span></button>
+    <dialog id="mobile-navigation" class="mobile-navigation" aria-labelledby="mobile-menu-title">
+      <div class="mobile-navigation-header"><h2 id="mobile-menu-title">メニュー</h2><button id="menu-close" class="dads-hamburger-menu-button" type="button"><svg class="dads-hamburger-menu-button__icon" width="24" height="24" viewBox="0 0 120 120" aria-hidden="true"><path d="M32 95L25 88L53 60L25 32L32 25L60 53L88 25L95 32L67 60L95 88L88 95L60 67L32 95Z" fill="currentColor"/></svg>閉じる</button></div>
+      <nav aria-label="機器設定"><ul class="dads-menu-list">
+      <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" data-page="keys" href="#page-keys" aria-current="page" data-current><span class="dads-menu-list__label">キー・ホイール</span></a></li>
+      <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" data-page="light" href="#page-light"><span class="dads-menu-list__label">Light</span></a></li>
+      <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" data-page="macro" href="#page-macro"><span class="dads-menu-list__label">マクロ</span></a></li>
+      <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" data-page="backup" href="#page-backup"><span class="dads-menu-list__label">バックアップ</span></a></li>
+      <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" data-page="help" href="#page-help"><span class="dads-menu-list__label">使い方</span></a></li>
+    </ul></nav></dialog>
+    <div class="settings-pages">
+    <div id="panel-keys" class="settings-panel" role="region" aria-label="キー・ホイール" tabindex="-1">
+    <h3>キーの割り当て</h3>
+    <div class="key-view-controls" role="group" aria-label="表示する設定"><button class="dads-button" data-size="sm" data-type="outline" data-key-view="layout" aria-pressed="true">配置</button><button class="dads-button" data-size="sm" data-type="outline" data-key-view="key" aria-pressed="false">キー設定</button><button class="dads-button" data-size="sm" data-type="outline" data-key-view="wheel" aria-pressed="false">ホイール</button></div>
+    <div id="workspace" class="workspace" data-view="layout" aria-busy="false">
       <section class="keyboard-panel" aria-label="キーボードの配置">
         <div class="keyboard-top"><span>MKESPN <strong>K810</strong></span><span>USB 接続</span></div>
         <div class="device-body"><div id="keypad" class="keypad" role="group" aria-label="12キー"></div>
           <div class="stick-area"><span class="hardware-label">スティック</span><div id="stick" class="stick" role="group" aria-label="スティック4方向"></div></div>
-          <a class="roller" href="#wheel-title" aria-label="ホイール設定へ移動"><span></span><small>ホイール設定へ</small></a>
+          <a class="roller" href="#wheel-title" aria-label="ホイール設定へ移動"><span class="wheel-shape"></span><small><span aria-hidden="true">▲</span> ホイール <span aria-hidden="true">▼</span></small></a>
         </div>
-        <p class="device-caption">実機の配置をもとに表示しています。<br>青枠は選択中、<span class="change-mark">●</span> は未保存の変更です。</p>
       </section>
       <section class="editor" aria-labelledby="editor-title">
-        <p class="eyebrow">選択中のキー</p><h3 id="editor-title">上段 1</h3>
+        <p class="eyebrow">選択中のキー</p><h4 id="editor-title">上段 1</h4>
         <dl class="current"><dt>本体の設定</dt><dd id="current-key">未読み取り</dd></dl>
-        <label for="key-select" class="field-label">割り当てるキー</label>
+        <div class="assignment-fields"><div><label for="key-category" class="field-label">操作の種類</label><select id="key-category" class="dads-select__select" data-size="md"></select></div><div><label for="key-select" class="field-label">キー・操作</label>
         <span class="dads-select"><span class="dads-select__control">
           <select id="key-select" class="dads-select__select" data-size="md" aria-describedby="key-help"></select>
           <svg class="dads-select__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor"/></svg>
-        </span></span>
-        <p id="key-help" class="muted small">単一のキーを指定できます。Ctrl+Cなどの組み合わせや連続マクロには対応していません。</p>
-        <button id="revert-key" class="dads-button" data-size="sm" data-type="text" disabled>このキーの変更を取り消す</button>
-        <hr><p class="small">図の表示は割り当てた出力キーです。キーキャップの刻印と異なる場合があります。</p>
+        </span></span></div></div>
+        <div class="key-actions">
+        <button id="edit-key-macro" class="dads-button" data-size="sm" data-type="outline">マクロを設定</button>
+        <button id="revert-key" class="dads-button" data-size="sm" data-type="text" disabled>元に戻す</button>
+        </div>
       </section>
-    </div>
-    <section class="wheel-panel" aria-labelledby="wheel-title"><h2 id="wheel-title">ホイールの割り当て</h2>
-      <p>回転方向ごとに操作を設定できます。保存後、ホイールを回して動作を確認してください。</p>
+    <section id="wheel-settings" class="wheel-editor" aria-labelledby="wheel-title"><h4 id="wheel-title">ホイールの割り当て</h4>
+
       <div class="wheel-fields">
-        <div><label class="field-label" for="wheel-up">上方向の回転（Roll Up）</label><p class="muted small">本体の設定：<span id="wheel-current-up">未読み取り</span></p>
+        <div><label class="field-label" for="wheel-up">上方向</label><p class="muted small">本体の設定：<span id="wheel-current-up">未読み取り</span></p>
           <span class="dads-select"><span class="dads-select__control"><select id="wheel-up" class="dads-select__select" data-size="md" aria-describedby="wheel-help"></select><svg class="dads-select__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor"/></svg></span></span></div>
-        <div><label class="field-label" for="wheel-down">下方向の回転（Roll Down）</label><p class="muted small">本体の設定：<span id="wheel-current-down">未読み取り</span></p>
+        <div><label class="field-label" for="wheel-down">下方向</label><p class="muted small">本体の設定：<span id="wheel-current-down">未読み取り</span></p>
           <span class="dads-select"><span class="dads-select__control"><select id="wheel-down" class="dads-select__select" data-size="md" aria-describedby="wheel-help"></select><svg class="dads-select__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor"/></svg></span></span></div>
       </div>
-      <p id="wheel-help" class="muted small">方向名はメーカーの表記です。実際の回転方向が逆なら、割り当てを入れ替えてください。LED速度・明るさの動作は未確認です。任意キーやマクロの割り当てには対応していません。</p>
-      <button id="wheel-swap" class="dads-button" data-size="sm" data-type="text" disabled>上方向と下方向を入れ替える</button>
+
+      <button id="wheel-swap" class="dads-button" data-size="sm" data-type="text" disabled>上下を入れ替える</button>
     </section>
-    <section class="review" aria-labelledby="review-title"><div class="section-heading"><h2 id="review-title">3. 変更を確認して保存</h2><span id="change-count">変更なし</span></div>
-      <p id="no-changes" class="muted">キーやホイールを編集すると、ここに変更内容が表示されます。</p>
-      <ul id="changes" class="changes"></ul>
-      <div class="save-actions"><button id="apply" class="dads-button" data-size="md" data-type="solid-fill" disabled>キーボードに保存する</button>
-        <button id="reset" class="dads-button" data-size="md" data-type="outline" disabled>変更をすべて取り消す</button>
-        <button id="reload" class="dads-button" data-size="md" data-type="text" disabled>本体から再読み取り</button></div>
-      <p class="muted small">保存前の設定は復元用としてブラウザに保持します。保存中はUSBを抜かず、この画面を開いたままにしてください。</p>
+    </div>
+    </div>
+    <section id="panel-light" class="settings-panel" role="region" aria-label="Light" tabindex="-1" hidden><h3 id="light-title">Light · 照明の設定</h3>
+      <details class="light-info dads-disclosure"><summary class="dads-disclosure__summary"><svg class="dads-disclosure__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><circle class="dads-disclosure__icon-circle" cx="12" cy="12" r="8" fill="currentColor"/><path class="dads-disclosure__icon-triangle" d="M17 10H7L12 15L17 10Z" fill="Canvas"/></svg>本体の照明設定・使い方</summary><div class="dads-disclosure__content"><p id="light-current" class="muted small">未読み取り</p><p>モードによって反映される項目が異なります。色は本体の4bit精度へ丸められます。循環色は1色以上選択してください。各モードの効果、方向・反応方式は実機検証中です。</p></div></details>
+      <fieldset id="light-controls" disabled><legend>照明を編集</legend>
+        <div class="wheel-fields">
+          <div><label class="field-label" for="light-mode">点灯モード</label><select id="light-mode" class="dads-select__select" data-size="md"></select></div>
+          <div><label class="field-label" for="light-brightness">明るさ（0〜6、6が最も明るい）</label><input id="light-brightness" type="number" min="0" max="6" value="6"></div>
+          <div><label class="field-label" for="light-speed">速度（0〜6）</label><input id="light-speed" type="number" min="0" max="6" value="3"></div>
+          <div><label class="field-label" for="light-direction">方向</label><select id="light-direction" class="dads-select__select" data-size="md"><option value="0">順方向</option><option value="1">逆方向</option><option value="2">往復</option><option value="3">方向4（対応モードのみ）</option></select></div>
+          <div><label class="field-label" for="light-reaction">反応方式（反応モード用）</label><select id="light-reaction" class="dads-select__select" data-size="md"><option value="0">方式1</option><option value="1">方式2</option><option value="2">方式3</option><option value="3">方式4</option></select></div>
+          <div><label class="field-label" for="light-color">単色・色循環</label><select id="light-color" class="dads-select__select" data-size="md"><option value="0">有効な色を循環する</option></select></div>
+        </div>
+        <label class="light-symmetry"><input id="light-symmetry" type="checkbox"> 対称表示（対応モードのみ）</label>
+        <div id="light-palette" class="light-palette"></div>
+
+        <div class="light-actions"><button id="stage-light" class="dads-button" data-size="sm" data-type="outline">この照明設定を変更一覧に追加</button><button id="revert-light" class="dads-button" data-size="sm" data-type="text" disabled>照明の変更を取り消す</button></div>
+      </fieldset>
+
     </section>
-    <section class="backup-section" aria-labelledby="backup-title"><h2 id="backup-title">バックアップと復元</h2>
+    <section id="panel-macro" class="settings-panel" role="region" aria-label="マクロ" tabindex="-1" hidden><h3 id="macro-title">マウス・ショートカット・マクロ</h3>
+      <p>対象：<strong id="macro-target">上段 1</strong>。キーの選択はキー・ホイール画面と共通です。</p>
+      <label class="field-label" for="macro-key-select">割り当て先のキー</label><select id="macro-key-select" class="dads-select__select" data-size="md"></select>
+      <fieldset id="macro-controls" disabled><legend>割り当てる操作を作成</legend>
+        <div class="wheel-fields">
+          <div><label class="field-label" for="shortcut-input">キーの組み合わせ</label><input id="shortcut-input" value="Ctrl+C" aria-describedby="shortcut-help"><p id="shortcut-help" class="small muted">例：Ctrl+C、Ctrl+Shift+S、Alt+F13</p><button id="stage-shortcut" class="dads-button" data-size="sm" data-type="outline">この組み合わせを割り当てる</button></div>
+          <div><label class="field-label" for="mouse-action">マウス操作</label><select id="mouse-action" class="dads-select__select" data-size="md"><option value="left">左クリック</option><option value="right">右クリック</option><option value="middle">中クリック</option><option value="scroll-up">上にスクロール</option><option value="scroll-down">下にスクロール</option></select><p class="small muted">1回の操作をキーへ割り当てます。</p><button id="stage-mouse" class="dads-button" data-size="sm" data-type="outline">このマウス操作を割り当てる</button></div>
+        </div>
+        <details class="dads-disclosure"><summary class="dads-disclosure__summary"><svg class="dads-disclosure__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><circle class="dads-disclosure__icon-circle" cx="12" cy="12" r="8" fill="currentColor"/><path class="dads-disclosure__icon-triangle" d="M17 10H7L12 15L17 10Z" fill="Canvas"/></svg>複数の操作を組み合わせる</summary><div class="dads-disclosure__content"><div class="macro-builder">
+          <p class="small">押す・離す・移動・スクロール・待機を順に追加できます。操作後の待機時間は8ms単位に切り捨てられます。</p>
+          <div class="macro-recording"><button id="record-start" class="dads-button" data-size="sm" data-type="outline">入力を記録する</button><button id="record-stop" class="dads-button" data-size="sm" data-type="text" disabled>記録を終了して編集画面へ</button>
+            <p id="record-status" class="small muted" aria-live="polite">下の欄に入力した操作だけを記録できます。終了はEscキー、または欄の外をクリックしてください。OSが予約するショートカットは記録できない場合があります。</p>
+            <textarea id="record-area" rows="2" aria-label="マクロ記録欄" placeholder="記録を開始すると、ここでキー・マウス・スクロールを記録できます。" readonly></textarea>
+          </div>
+          <button id="read-macro" class="dads-button" data-size="sm" data-type="outline" disabled>選択したキーのマクロを本体から読む</button>
+          <div id="macro-rows"></div><button id="macro-add" class="dads-button" data-size="sm" data-type="outline">操作を追加する</button>
+          <div class="wheel-fields"><div><label class="field-label" for="macro-mode">繰り返し方法</label><select id="macro-mode" class="dads-select__select" data-size="md"><option value="repeat">指定回数</option><option value="while-held">キーを押している間</option><option value="until-click">次のキー操作まで</option></select></div><div><label class="field-label" for="macro-repeat">繰り返し回数</label><input id="macro-repeat" type="number" min="1" max="65535" value="1"></div></div>
+          <button id="stage-macro" class="dads-button" data-size="sm" data-type="outline">作成したマクロを割り当てる</button>
+        </div></div></details>
+      </fieldset><p class="small muted">割り当て後、変更一覧を確認して「キーボードに保存する」を押してください。マクロの保存・完全バックアップは通常より時間がかかります。</p>
+      <details class="dads-disclosure"><summary class="dads-disclosure__summary"><svg class="dads-disclosure__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><circle class="dads-disclosure__icon-circle" cx="12" cy="12" r="8" fill="currentColor"/><path class="dads-disclosure__icon-triangle" d="M17 10H7L12 15L17 10Z" fill="Canvas"/></svg>マクロライブラリ（このブラウザに保存）</summary><div class="dads-disclosure__content"><div class="macro-builder">
+        <p class="small">名前付きの編集データをLocalStorageへ保存します。ライブラリの保存・読み込みでは本体へ書き込みません。JSONで別のブラウザへ移せます。</p>
+        <fieldset id="library-controls"><legend>グループとマクロを管理</legend>
+          <div class="wheel-fields"><div><label class="field-label" for="library-group">グループ</label><select id="library-group" class="dads-select__select" data-size="md"></select></div><div><label class="field-label" for="library-group-name">グループ名</label><input id="library-group-name" maxlength="64" value="マイマクロ"></div></div>
+          <div class="save-actions"><button id="library-group-new" class="dads-button" data-size="sm" data-type="outline">グループを新規作成</button><button id="library-group-rename" class="dads-button" data-size="sm" data-type="text">グループ名を変更</button><button id="library-group-delete" class="dads-button" data-size="sm" data-type="text">グループを削除</button></div>
+          <div class="wheel-fields"><div><label class="field-label" for="library-macro">保存したマクロ</label><select id="library-macro" class="dads-select__select" data-size="md"></select></div><div><label class="field-label" for="library-macro-name">マクロ名</label><input id="library-macro-name" maxlength="64" value="新しいマクロ"></div></div>
+          <div class="save-actions"><button id="library-load" class="dads-button" data-size="sm" data-type="outline">編集画面へ読み込む</button><button id="library-save-new" class="dads-button" data-size="sm" data-type="outline">編集内容を新規保存</button><button id="library-update" class="dads-button" data-size="sm" data-type="text">選択したマクロを更新</button><button id="library-delete" class="dads-button" data-size="sm" data-type="text">マクロを削除</button></div>
+          <hr><div class="save-actions"><button id="library-export" class="dads-button" data-size="sm" data-type="outline">ライブラリをJSONで保存</button><button id="library-import" class="dads-button" data-size="sm" data-type="outline">JSONからグループを追加</button></div>
+          <input id="library-file" type="file" accept=".json,application/json" hidden>
+        </fieldset>
+      </div></div></details>
+    </section>
+    <section id="panel-backup" class="settings-panel" role="region" aria-label="バックアップ" tabindex="-1" hidden><h3 id="backup-title">バックアップと復元</h3>
       <p>現在の設定をJSONファイルとして保存できます。復元ファイルを読み込んだ後も、「キーボードに保存する」を押すまで本体は変更されません。</p>
       <div class="save-actions"><button id="export" class="dads-button" data-size="md" data-type="outline" disabled>現在の設定を保存</button>
         <button id="import" class="dads-button" data-size="md" data-type="outline" disabled>ファイルから復元</button>
         <button id="recovery" class="dads-button" data-size="md" data-type="text" disabled>保存前の復元データを取得</button></div>
       <input type="file" id="backup-file" accept=".json,application/json" hidden>
-      <p class="muted small">設定領域248バイトのバックアップです。復元対象は12キー・スティック4方向・ホイールの割り当てです。同じ個体のバックアップを使用してください。</p>
+      <p class="muted small">「現在の設定を保存」はマクロを含む完全バックアップを取得します。旧形式のバックアップはキー・ホイールのみ復元できます。同じ個体のバックアップを使用してください。</p>
     </section>
-    <section id="guide" class="guide"><h2>使い方と対応環境</h2>
-      <details><summary>初めて使うとき</summary><ol><li>PCにK810をUSB接続し、ChromeまたはEdgeでこのページを開きます。</li><li>「K810に接続する」を押し、「USB Keyboard」を選択して接続を許可します。</li><li>図のキーを選んで割り当てを編集し、変更一覧を確認して保存します。</li></ol><p>機器一覧に出ない場合は、USBの接続を確認し、他の設定アプリやこのツールの別タブを閉じてください。</p></details>
-      <details><summary>対応しているブラウザ・機能</summary><p>実機通信の対象はWebHIDに対応するPC版Chrome・Edgeです。Safari・Firefox、iPhone・iPad、通常のAndroidブラウザからの実機設定変更には対応していません。画面のデモはスマートフォンでも試せます。</p><p>RGB全般、スティック押し込みの再割り当て、プロファイル切替、マクロは未対応です。ホイールは8種類の操作を選べますが、LED関連4項目の動作は未確認です。対応機器はMKESPN K810（USB 30FA:2350）。Logitech K810は別製品です。</p></details>
-      <details><summary>データの取り扱い・復元について</summary><p>USB通信と設定処理はこのブラウザ内で完結し、設定をサーバーに送信しません。アクセス解析・外部フォント・外部スクリプトは使用していません。サイトの配信はGitHub Pagesを利用します。</p><p>保存前の復元データは、このブラウザのローカルストレージに1件保持します。ブラウザのデータを消すと失われるため、必要に応じてJSONを取得してください。機器の識別に使えるシリアル番号がないため、別個体のバックアップを取り違えないでください。</p></details>
+
+    <section id="panel-help" class="settings-panel" role="region" aria-label="使い方" tabindex="-1" hidden><h3 id="guide">使い方と対応環境</h3>
+      <details class="dads-accordion"><summary class="dads-accordion__summary"><span class="dads-accordion__icon"><svg class="dads-accordion__icon-svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.3L12 16L20.7 7.3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><h4>キー・ホイールの設定</h4></summary><div class="dads-accordion__content">
+        <p id="key-help">図のキーを選んで割り当てを変更します。青い枠は編集中のキーです。図の文字は現在の割り当てで、キーキャップの刻印と異なる場合があります。キーの組み合わせやマウス操作は「マクロを設定」から編集します。</p>
+        <p id="wheel-help">上方向・下方向はメーカーのRoll Up／Roll Downに対応します。操作したい向きと逆の場合は「上下を入れ替える」を使います。任意キー・マクロはホイールに割り当てられません。</p>
+        <p>音量アップ・照明モード切り替えは実機確認済みです。照明オン／オフは検証個体では反応せず、その他の単独操作とホイールのLED操作は検証中です。</p>
+        <p>この静的サイトには入力テスト・入力監視・ハイライト機能はありません。保存後は実際に操作して動作を確認してください。小さい画面では「配置」「キー設定」「ホイール」で表示内容を切り替えます。</p>
+      </div></details>
+
+      <details class="dads-accordion"><summary class="dads-accordion__summary"><span class="dads-accordion__icon"><svg class="dads-accordion__icon-svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.3L12 16L20.7 7.3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><h4>初めて使うとき</h4></summary><div class="dads-accordion__content"><ol><li>PCにK810をUSB接続し、ChromeまたはEdgeでこのページを開きます。</li><li>「K810に接続する」を押し、「USB Keyboard」を選択して接続を許可します。</li><li>図のキーを選んで割り当てを編集し、変更一覧を確認して保存します。</li></ol><p>機器一覧に出ない場合は、USBの接続を確認し、他の設定アプリやこのツールの別タブを閉じてください。</p></div></details>
+      <details class="dads-accordion"><summary class="dads-accordion__summary"><span class="dads-accordion__icon"><svg class="dads-accordion__icon-svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.3L12 16L20.7 7.3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><h4>対応しているブラウザ・機能</h4></summary><div class="dads-accordion__content"><p>実機通信の対象はWebHIDに対応するPC版Chrome・Edgeです。Safari・Firefox、iPhone・iPad、通常のAndroidブラウザからの実機設定変更には対応していません。画面のデモはスマートフォンでも試せます。</p><p>メディア・照明の単独操作、ショートカット、キーボード・マウス・待機・照明シーケンスのマクロ、Light設定とブラウザ内ライブラリを実装しています。実機検証は継続中で、保存値の一致だけでは全機能の動作を保証できません。スティック押し込みの再割り当て、プロファイル切替、GPIO制御、メーカー形式のマクロファイル入出力は未対応です。ホイールは8種類の操作を選べますが、LED関連4項目の動作は未確認です。対応機器はMKESPN K810（USB 30FA:2350）。Logitech K810は別製品です。</p></div></details>
+      <details class="dads-accordion"><summary class="dads-accordion__summary"><span class="dads-accordion__icon"><svg class="dads-accordion__icon-svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.3L12 16L20.7 7.3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><h4>データの取り扱い・復元について</h4></summary><div class="dads-accordion__content"><p>USB通信と設定処理はこのブラウザ内で完結し、設定をサーバーに送信しません。アクセス解析・外部フォント・外部スクリプトは使用していません。サイトの配信はGitHub Pagesを利用します。</p><p>保存前の復元データは、このブラウザのローカルストレージに1件保持します。ブラウザのデータを消すと失われるため、必要に応じてJSONを取得してください。機器の識別に使えるシリアル番号がないため、別個体のバックアップを取り違えないでください。</p></div></details>
+    </section>
+
+    </div>
+    </div>
+    <section class="review" aria-labelledby="review-title">
+      <h2 id="review-title" class="visually-hidden">変更を確認して保存</h2>
+      <details class="review-details dads-disclosure"><summary class="dads-disclosure__summary"><svg class="dads-disclosure__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><circle class="dads-disclosure__icon-circle" cx="12" cy="12" r="8" fill="currentColor"/><path class="dads-disclosure__icon-triangle" d="M17 10H7L12 15L17 10Z" fill="Canvas"/></svg>変更一覧 <span id="change-count">変更なし</span></summary><div class="review-content dads-disclosure__content">
+        <p id="no-changes" class="muted">編集すると、ここに変更内容が表示されます。</p><ul id="changes" class="changes"></ul>
+      </div></details>
+      <div class="save-actions"><button id="apply" class="dads-button" data-size="md" data-type="solid-fill" disabled>キーボードに保存する</button>
+        <button id="reset" class="dads-button" data-size="sm" data-type="outline" disabled>変更を取り消す</button>
+        <button id="reload" class="dads-button" data-size="sm" data-type="text" disabled>再読み取り</button></div>
     </section>
   </main>
-  <footer><div class="container"><p><strong>K810 キーボード設定</strong> · 非公式オープンソースツール</p><p><a href="https://github.com/skrtk98/MKESPN-K810-keyboard">ソースコード・解析記録</a> <span aria-hidden="true">／</span> <a href="https://design.digital.go.jp/dads/">デジタル庁デザインシステム</a></p><p class="small muted">デジタル庁の公式サンプルCSSを使用しています。このサイトはデジタル庁およびキーボードメーカーが提供するものではありません。</p></div></footer>
+  <footer class="site-footer"><span>非公式ツール · メーカー・デジタル庁とは無関係</span><nav aria-label="出典"><a href="https://github.com/skrtk98/MKESPN-K810-keyboard">ソース・解析記録</a><a href="https://design.digital.go.jp/dads/">デザイン：DADS</a></nav></footer>
+
+
+  <dialog id="result-dialog" class="dads-modal-dialog" aria-labelledby="result-dialog-title" aria-describedby="result-dialog-text">
+    <div class="dads-modal-dialog__dialog"><div class="dads-modal-dialog__header"><h2 id="result-dialog-title" class="dads-modal-dialog__heading" tabindex="-1">操作を完了できませんでした</h2><button id="result-dialog-close" class="dads-modal-dialog__close" type="button"><svg class="dads-modal-dialog__close-icon" width="24" height="24" viewBox="0 0 120 120" aria-hidden="true"><path d="M32 95L25 88L53 60L25 32L32 25L60 53L88 25L95 32L67 60L95 88L88 95L60 67L32 95Z" fill="currentColor"/></svg>閉じる</button></div><div class="dads-modal-dialog__body"><p id="result-dialog-text"></p></div><div class="dads-modal-dialog__actions"><button id="result-dialog-ok" class="dads-button" data-size="md" data-type="solid-fill" type="button">確認しました</button></div></div>
+  </dialog>
 </body>
 </html>

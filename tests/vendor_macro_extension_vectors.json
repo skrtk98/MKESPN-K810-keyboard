@@ -1,0 +1,191 @@
+{
+  "source_sha256": "ef79b5e0ad1786dd682bc8ed1dad4626627c0518639ec67a702088d6322b8e36",
+  "cases": [
+    {
+      "name": "media-volume-up",
+      "code": 250,
+      "types": [
+        11,
+        12
+      ],
+      "parameters": [
+        233,
+        233
+      ],
+      "led_hex": null,
+      "gpio_hex": null,
+      "writes": [
+        {
+          "write_address": 472,
+          "data": "0702400200000000"
+        },
+        {
+          "write_address": 480,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 576,
+          "data": "010001fae90081fa"
+        },
+        {
+          "write_address": 584,
+          "data": "e900000000000000"
+        }
+      ]
+    },
+    {
+      "name": "led-type-13",
+      "code": 249,
+      "types": [
+        13
+      ],
+      "parameters": [
+        0
+      ],
+      "led_hex": "0100000002010a01",
+      "gpio_hex": null,
+      "writes": [
+        {
+          "write_address": 472,
+          "data": "0701400200000000"
+        },
+        {
+          "write_address": 480,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 576,
+          "data": "010001f948020000"
+        },
+        {
+          "write_address": 584,
+          "data": "0000000002010a01"
+        }
+      ]
+    },
+    {
+      "name": "led-type-14",
+      "code": 249,
+      "types": [
+        14
+      ],
+      "parameters": [
+        0
+      ],
+      "led_hex": "0100000002010a01",
+      "gpio_hex": null,
+      "writes": [
+        {
+          "write_address": 472,
+          "data": "0701400200000000"
+        },
+        {
+          "write_address": 480,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 576,
+          "data": "010001f948420000"
+        },
+        {
+          "write_address": 584,
+          "data": "0000000002010a01"
+        }
+      ]
+    },
+    {
+      "name": "led-type-15",
+      "code": 249,
+      "types": [
+        15
+      ],
+      "parameters": [
+        0
+      ],
+      "led_hex": "0100000002010a01",
+      "gpio_hex": null,
+      "writes": [
+        {
+          "write_address": 472,
+          "data": "0701400200000000"
+        },
+        {
+          "write_address": 480,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 576,
+          "data": "010001f948820000"
+        },
+        {
+          "write_address": 584,
+          "data": "0000000002010a01"
+        }
+      ]
+    },
+    {
+      "name": "led-two-patterns",
+      "code": 249,
+      "types": [
+        13
+      ],
+      "parameters": [
+        0
+      ],
+      "led_hex": "0200000000010a0102011401",
+      "gpio_hex": null,
+      "writes": [
+        {
+          "write_address": 472,
+          "data": "0701400200000000"
+        },
+        {
+          "write_address": 480,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 576,
+          "data": "010001f948020000"
+        },
+        {
+          "write_address": 584,
+          "data": "0100000000010a01"
+        },
+        {
+          "write_address": 592,
+          "data": "0201140100000000"
+        }
+      ]
+    },
+    {
+      "name": "gpio-structure-only",
+      "code": 251,
+      "types": [
+        16
+      ],
+      "parameters": [
+        0
+      ],
+      "led_hex": null,
+      "gpio_hex": "0100000000000000",
+      "writes": [
+        {
+          "write_address": 472,
+          "data": "0701400200000000"
+        },
+        {
+          "write_address": 480,
+          "data": "0000000000000000"
+        },
+        {
+          "write_address": 576,
+          "data": "010001fb48020000"
+        },
+        {
+          "write_address": 584,
+          "data": "0000000000000000"
+        }
+      ]
+    }
+  ]
+}

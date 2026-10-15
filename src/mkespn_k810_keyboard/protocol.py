@@ -1,5 +1,7 @@
 """K201 protocol decoded from Gaming Keyboard.exe; see docs/PROTOCOL.md."""
 
+from .actions import ACTIONS
+
 REPORT_ID = 7
 EEPROM_SIZE = 8192
 CONFIG_SIZE = 0xF8
@@ -71,16 +73,20 @@ def keycode(name: str) -> int:
     name = name.lower()
     if name in KEYS:
         return KEYS[name]
+    if name in ACTIONS:
+        return ACTIONS[name]
     try:
         value = int(name, 0)
     except ValueError:
         raise ValueError(f"Unknown key: {name}. Use a..z, f1..f24, kp0..kp9 or 0xNN.") from None
-    if not (0 <= value <= 0xA4 or 0xE0 <= value <= 0xE7):
+    if not (0 <= value <= 0xA4 or 0xE0 <= value <= 0xE7 or value in ACTIONS.values()):
         raise ValueError("Only ordinary keyboard usages 0x00..0xA4 and modifiers 0xE0..0xE7 are supported.")
     return value
 
 
 def keyname(code: int) -> str:
+    if code in ACTIONS.values():
+        return next(k for k, v in ACTIONS.items() if v == code)
     return next((k for k, v in KEYS.items() if v == code), f"0x{code:02x}")
 
 
