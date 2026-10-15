@@ -1,4 +1,21 @@
 export const CONFIG_SIZE = 248;
+export const WHEEL_OFFSET = 0x20;
+export const WHEEL_ACTIONS = [
+  [0,'音量を上げる'],[1,'音量を下げる'],[2,'上にスクロール'],[3,'下にスクロール'],
+  [7,'LED速度を上げる'],[8,'LED速度を下げる'],[9,'LEDを明るくする'],[10,'LEDを暗くする'],
+];
+export const wheelLabel = code => WHEEL_ACTIONS.find(a=>a[0]===code)?.[1] ?? `未対応の設定（${code}）`;
+export function wheelValue(data,direction) {
+  if(!['up','down'].includes(direction)) throw new Error('ホイール方向が不正です。');
+  return (data[WHEEL_OFFSET]>>(direction==='up'?4:0))&15;
+}
+export function setWheel(data,direction,value) {
+  if(!WHEEL_ACTIONS.some(a=>a[0]===value)) throw new Error('未対応のホイール設定です。');
+  wheelValue(data,direction);
+  const result=data.slice(),shift=direction==='up'?4:0;
+  result[WHEEL_OFFSET]=(result[WHEEL_OFFSET]&(shift?15:240))|(value<<shift);
+  return result;
+}
 export const CONTROLS = [
   ['kp1', '上段 1', 89], ['kp2', '上段 2', 90], ['kp3', '上段 3', 91],
   ['kp4', '上段 4', 92], ['kp5', '上段 5', 93], ['kp6', '中段 1', 94],
@@ -60,6 +77,23 @@ export function keymapOnly(before, draft) {
   for (const [id] of CONTROLS) result[offset(id)]=draft[offset(id)];
   return result;
 }
+export function settingsOnly(before,draft) {
+  if(before.length!==CONFIG_SIZE || draft.length!==CONFIG_SIZE) throw new Error('設定データの長さが不正です。');
+  let result=keymapOnly(before,draft);
+  for(const direction of ['up','down']) {
+    const value=wheelValue(draft,direction);
+    if(value!==wheelValue(before,direction)) result=setWheel(result,direction,value);
+  }
+  return result;
+}
+export function diffSettings(before,after) {
+  const changes=diffKeys(before,after);
+  for(const direction of ['up','down']) {
+    const oldValue=wheelValue(before,direction),newValue=wheelValue(after,direction);
+    if(oldValue!==newValue) changes.push({id:`wheel-${direction}`,kind:'wheel',label:`ホイール ${direction==='up'?'上':'下'}方向`,before:oldValue,after:newValue});
+  }
+  return changes;
+}
 export async function checksum(data) {
   return hex(new Uint8Array(await crypto.subtle.digest('SHA-256',data)));
 }
@@ -79,7 +113,7 @@ export async function parseBackup(doc) {
 
 export class K810 {
   constructor(device,{wait=ms=>new Promise(resolve=>setTimeout(resolve,ms)),progress=()=>{}}={}) {
-    this.device=device; this.wait=wait; this.progress=progress; this.active=false;
+    this.device=device; this.wait=wait; this.progress=progress; this.active=false; this.configurationActive=false;
   }
   static matches(d) {
     return d.vendorId===0x30fa && d.productId===0x2350 &&
@@ -89,7 +123,16 @@ export class K810 {
     if (!K810.matches(this.device)) throw new Error('対応するK810設定インターフェースがありません。');
     if (!this.device.opened) await this.device.open();
   }
-  async send(bytes) { await this.device.sendFeatureReport(7,bytes.slice(1)); }
+  async send(bytes) {
+    if([0x18,9].includes(bytes[1])) this.configurationActive=true;
+    await this.device.sendFeatureReport(7,bytes.slice(1));
+    if(bytes[1]===0x20) this.configurationActive=false;
+  }
+  async finishConfiguration() {
+    if(!this.configurationActive) return;
+    await this.send(packet(0x11)); await this.wait(10); await this.send(packet());
+    await this.send(Uint8Array.of(7,0x20,0,0,0,0,0,0)); await this.wait(10);
+  }
   async getByte() {
     const view=await this.device.receiveFeatureReport(7);
     // The WebHID specification preserves the OS report ID in feature responses.
@@ -117,26 +160,31 @@ export class K810 {
     return result;
   }
   async snapshot() {
-    const header=await this.read(0xd0,8), base=baseFromHeader(header);
-    const data=await this.readRange(base,CONFIG_SIZE);
-    if (new Set(data).size<3) throw new Error('設定が空です。未対応のファームウェアの可能性があります。');
-    return {base,header,data};
+    try {
+      const header=await this.read(0xd0,8), base=baseFromHeader(header);
+      const data=await this.readRange(base,CONFIG_SIZE);
+      if (new Set(data).size<3) throw new Error('設定が空です。未対応のファームウェアの可能性があります。');
+      return {base,header,data};
+    } finally { await this.finishConfiguration(); }
   }
   async exclusive(action) {
     if(this.active) throw new Error('通信処理が実行中です。');
     this.active=true;
-    try { return await action(); } finally { this.active=false; }
+    try { return await action(); } finally {
+      try { await this.finishConfiguration(); } finally { this.active=false; }
+    }
   }
   async apply(snapshot,draft,saveRecovery) {
     return this.exclusive(async()=>{
-      const intended=keymapOnly(snapshot.data,draft);
-      const changes=diffKeys(snapshot.data,intended);
+      const intended=settingsOnly(snapshot.data,draft);
+      const changes=diffSettings(snapshot.data,intended);
       if(!changes.length) return snapshot;
       // Re-read before writing: never overwrite another app/tab's changes.
       const current=await this.snapshot();
       if(current.base!==snapshot.base || !equal(current.data,snapshot.data)) throw new Error('本体の設定が変更されています。再読み取りして編集し直してください。');
       await saveRecovery(await backupOf(current)); // Failure MUST abort before EEPROM commits.
-      const blocks=changes.map(c=>({address:current.base+offset(c.id),data:intended.slice(offset(c.id),offset(c.id)+8)}));
+      const blocks=changes.filter(c=>c.kind!=='wheel').map(c=>({address:current.base+offset(c.id),data:intended.slice(offset(c.id),offset(c.id)+8)}));
+      if(current.data[WHEEL_OFFSET]!==intended[WHEEL_OFFSET]) blocks.push({address:current.base+WHEEL_OFFSET,data:intended.slice(WHEEL_OFFSET,WHEEL_OFFSET+1)});
       try {
         await this.send(Uint8Array.of(7,9,0x41,0,0,0,0,0)); await this.wait(200);
         for(const block of blocks) {

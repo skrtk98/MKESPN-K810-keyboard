@@ -97,6 +97,57 @@ def emulate_table(executable):
     return blocks
 
 
+def emulate_wheel(executable, up, down):
+    """Original packer, stopping before the next unrelated key-table routine."""
+    pe = pefile.PE(data=executable)
+    vm = Uc(UC_ARCH_X86, UC_MODE_32)
+    vm.mem_map(0x400000, (pe.OPTIONAL_HEADER.SizeOfImage + 4095) & ~4095)
+    vm.mem_write(0x400000, pe.get_memory_mapped_image())
+    vm.mem_map(0x1000000, 0x20000)
+    vm.reg_write(UC_X86_REG_ESP, 0x1010000)
+    vm.reg_write(UC_X86_REG_EBP, 0x1011000)
+    vm.mem_write(0x63D9B0, bytes((up, down)))
+    vm.mem_write(0x63DC3C, struct.pack('<I', 0xE0))
+    blocks = []
+
+    def hook(uc, ip, size, user):
+        if ip == 0x411021:
+            uc.emu_stop()
+        elif ip == 0x4071D0:
+            sp = uc.reg_read(UC_X86_REG_ESP)
+            target, address, buffer, length = struct.unpack('<4I', uc.mem_read(sp, 16))
+            blocks.append({'up': up, 'down': down, 'address': address,
+                           'data': bytes(uc.mem_read(buffer, length)).hex()})
+            uc.reg_write(UC_X86_REG_ESP, sp + 16); uc.reg_write(UC_X86_REG_EIP, target)
+        elif not 0x410FF7 <= ip < 0x411021:
+            raise RuntimeError(f'Unexpected wheel code target 0x{ip:x}')
+
+    vm.hook_add(UC_HOOK_CODE, hook)
+    vm.emu_start(0x410FF7, 0x411022, count=1000)
+    if len(blocks) != 1:
+        raise RuntimeError('Wheel packer did not produce exactly one byte write')
+    return blocks[0]
+
+
+def emulate_wheel_menu(executable, choice, direction):
+    pe = pefile.PE(data=executable)
+    vm = Uc(UC_ARCH_X86, UC_MODE_32)
+    vm.mem_map(0x400000, (pe.OPTIONAL_HEADER.SizeOfImage + 4095) & ~4095)
+    vm.mem_write(0x400000, pe.get_memory_mapped_image())
+    vm.mem_map(0x1000000, 0x20000)
+    vm.mem_write(0x1010000, struct.pack('<3I', 0, choice, 0))
+    vm.reg_write(UC_X86_REG_ESP, 0x1010000)
+    vm.mem_write(0x63DC38, struct.pack('<I', 124 + direction))
+    def hook(uc, ip, size, user):
+        if ip == 0x420D69:
+            uc.emu_stop()
+        elif not 0x420D00 <= ip < 0x420D69:
+            raise RuntimeError(f'Unexpected wheel menu code target 0x{ip:x}')
+    vm.hook_add(UC_HOOK_CODE, hook)
+    vm.emu_start(0x420D00, 0x420D6A, count=1000)
+    return {'choice': choice, 'direction': direction, 'code': vm.mem_read(0x63D9B0 + direction, 1)[0]}
+
+
 if __name__ == '__main__':
     executable = Path(sys.argv[1]).read_bytes()
     if hashlib.sha256(executable).hexdigest() != KNOWN_SHA256:
@@ -105,7 +156,12 @@ if __name__ == '__main__':
     vectors = {"source_sha256": KNOWN_SHA256, "address": 0x128, "data": data.hex(),
                "write": emulate(executable, 0x4071D0, 0x128, data),
                "read": emulate(executable, 0x406FD0, 0x128, data),
-               "table": emulate_table(executable)}
+               "table": emulate_table(executable),
+               "wheel_menu": [emulate_wheel_menu(executable, choice, direction)
+                              for choice in range(8) for direction in range(2)],
+               "wheel_packing": [emulate_wheel(executable, up, down)
+                                 for up, down in ((0, 1), (1, 0), (2, 3), (3, 2), (7, 8), (8, 7), (9, 10), (10, 9))],
+               "wheel_write": emulate(executable, 0x4071D0, 0x100, b'\x23')}
     output = Path('tests/vendor_vectors.json')
     output.parent.mkdir(exist_ok=True)
     output.write_text(json.dumps(vectors, indent=2) + '\n', encoding='utf8')

@@ -47,10 +47,12 @@ configuration collection is separately accessible.
 
 ## Write boundaries and recovery
 
-- UI edits and imports affect only the 16 exposed control bytes.
+- UI edits and imports affect only the 16 exposed control bytes and the wheel
+  assignment byte at configuration offset `0x20`.
 - Each changed column is written as its original 8-byte block with the other
-  seven bytes preserved. RGB, wheel columns, macros and configuration headers
-  are never writable through the UI.
+  seven bytes preserved. The wheel's two nibbles are combined into one single-byte
+  write, preserving the opposite direction when only one changes. RGB settings,
+  wheel matrix columns, macros and configuration headers are never writable.
 - Before writing, read the configuration again and compare with the session
   snapshot; concurrent changes cause an abort.
 - Web Locks serialize USB operations between same-origin tabs. Close other
@@ -58,6 +60,9 @@ configuration collection is separately accessible.
 - Save a SHA-256 checked backup to localStorage **before** EEPROM commits. If
   storage is unavailable/full, abort. One latest recovery backup is kept.
 - Read back and compare the complete 248-byte region after writing.
+- After reads and writes, send the original application's full configuration
+  finalization (`07 18 11`, wait 10ms, `07 18 00`, `07 20`, wait 10ms).
+  The block-local `18 01` alone did not reliably resume physical input in testing.
 - A failure requires rereading the device before further edits are saved.
 - Backups are compatible with the Python `mkespn-k810-config-v1` format. The Web
   backup has an empty `metadata_hex` and an additional `header_hex`, since the
@@ -83,7 +88,7 @@ it has not undergone an independent accessibility conformance audit.
 
 ## Verification on 2026-10-15
 
-- Node tests: ten passing cases, including original-app x86 packet fixtures,
+- Node tests: fourteen passing cases, including original-app x86 packet fixtures,
   report-ID handling, header validation, stale snapshots, storage failure,
   exclusive operation cleanup and backup integrity.
 - Desktop Chrome on the user's PC: authorized `USB Keyboard`, read configuration
@@ -92,6 +97,14 @@ it has not undergone an independent accessibility conformance audit.
   FF FF FF FF` at `0x0128`.
 - Restored Q through the WebHID UI and confirmed read-back success.
 - GUI rendering and the demo were checked in desktop and mobile-width layouts.
+- Python CLI: changed wheel byte `10 → 20 → 23`, verified complete configuration
+  readback, then restored `10`. The user confirmed scrolling in custom mode and
+  volume changes after restoration without USB reconnect using the corrected CLI.
+- The stick push switches between fixed volume mode and custom wheel mode.
+  LED action codes were recovered from the application but physical LED effects
+  have not been verified.
+- WebHID UI: changed both wheel directions from `10` to `23` in one commit and
+  restored `10`; both saves passed the complete 248-byte readback comparison.
 
-Actual physical keypress events, persistence across USB reconnect, other OSes,
+Individual physical key assignment events, other OSes,
 and other hardware/firmware versions are not part of this verification.

@@ -4,6 +4,43 @@ REPORT_ID = 7
 EEPROM_SIZE = 8192
 CONFIG_SIZE = 0xF8
 KEYMAP_OFFSET = 0x48
+WHEEL_OFFSET = 0x20
+# Original menu 0x420d00: items 98..105 map to these firmware values.
+WHEEL_ACTIONS = {
+    "volume-up": 0, "volume-down": 1, "scroll-up": 2, "scroll-down": 3,
+    "led-speed-up": 7, "led-speed-down": 8,
+    "led-brightness-up": 9, "led-brightness-down": 10,
+}
+
+
+def wheel_action(data: bytes, direction: str) -> str:
+    if direction not in ("up", "down"):
+        raise ValueError("Wheel direction must be up or down")
+    code = (data[WHEEL_OFFSET] >> (4 if direction == "up" else 0)) & 15
+    return next((name for name, value in WHEEL_ACTIONS.items() if value == code), f"unknown-0x{code:x}")
+
+
+def set_wheel(data: bytes, direction: str, action: str) -> bytearray:
+    if direction not in ("up", "down") or action not in WHEEL_ACTIONS:
+        raise ValueError("Unsupported wheel direction or action")
+    after = bytearray(data)
+    shift = 4 if direction == "up" else 0
+    after[WHEEL_OFFSET] = (after[WHEEL_OFFSET] & (0x0F if shift else 0xF0)) | (WHEEL_ACTIONS[action] << shift)
+    return after
+
+
+def changed_blocks(before: bytes, after: bytes) -> list[tuple[int, bytes]]:
+    """Only keymap blocks and the exact single wheel byte can be committed."""
+    if len(before) != CONFIG_SIZE or len(after) != CONFIG_SIZE:
+        raise ValueError("Invalid configuration length")
+    allowed = set(range(KEYMAP_OFFSET, KEYMAP_OFFSET + 160)) | {WHEEL_OFFSET}
+    if any(a != b and i not in allowed for i, (a, b) in enumerate(zip(before, after))):
+        raise ValueError("Attempt to modify an unsupported configuration field")
+    blocks = [(o, bytes(after[o:o + 8])) for o in range(KEYMAP_OFFSET, KEYMAP_OFFSET + 160, 8)
+              if before[o:o + 8] != after[o:o + 8]]
+    if before[WHEEL_OFFSET] != after[WHEEL_OFFSET]:
+        blocks.append((WHEEL_OFFSET, bytes(after[WHEEL_OFFSET:WHEEL_OFFSET + 1])))
+    return blocks
 
 # Names describe the factory function, not an assumed physical row/column.
 CONTROLS = {

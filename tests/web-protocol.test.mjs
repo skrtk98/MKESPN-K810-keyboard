@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {K810,CONTROLS,CONFIG_SIZE,offset,packet,writePackets,hex,baseFromHeader,backupOf,parseBackup,keymapOnly} from '../web/protocol.mjs';
+import {K810,CONTROLS,CONFIG_SIZE,offset,packet,writePackets,hex,baseFromHeader,backupOf,parseBackup,keymapOnly,
+  WHEEL_ACTIONS,WHEEL_OFFSET,wheelValue,setWheel,settingsOnly,diffSettings} from '../web/protocol.mjs';
 const vectors=JSON.parse(await readFile(new URL('./vendor_vectors.json',import.meta.url)));
 const noWait=async()=>{};
 
@@ -89,4 +90,42 @@ test('refuse malformed feature responses and unsupported collections',async()=>{
   device.receiveFeatureReport=async()=>new DataView(new ArrayBuffer(7));
   await assert.rejects(api.getByte(),/Report形式/);
   device.vendorId=1;await assert.rejects(api.open(),/インターフェース/);
+});
+test('wheel nibble packing matches original x86 packer and one-byte write',()=>{
+  assert.deepEqual(writePackets(0x100,Uint8Array.of(0x23)).map(b=>({set:hex(b)})),vectors.wheel_write);
+  for(const entry of vectors.wheel_packing) {
+    let data=new Uint8Array(CONFIG_SIZE);
+    data=setWheel(setWheel(data,'up',entry.up),'down',entry.down);
+    assert.equal(hex(data.slice(WHEEL_OFFSET,WHEEL_OFFSET+1)),entry.data);
+  }
+  assert.deepEqual(WHEEL_ACTIONS.map(a=>a[0]),[0,1,2,3,7,8,9,10]);
+});
+test('both wheel directions are committed as exactly one byte with no other changes',async()=>{
+  const device=new MockDevice(),api=new K810(device,{wait:noWait});
+  device.memory[0xe0+WHEEL_OFFSET]=0x10;
+  const before=await api.snapshot();
+  const draft=setWheel(setWheel(before.data,'up',2),'down',3);
+  const after=await api.apply(before,draft,async()=>{});
+  assert.equal(diffSettings(before.data,draft).length,2);
+  assert.equal(device.commits,1);assert.equal(after.data[WHEEL_OFFSET],0x23);
+  assert.deepEqual(after.data.slice(0,WHEEL_OFFSET),before.data.slice(0,WHEEL_OFFSET));
+  assert.deepEqual(after.data.slice(WHEEL_OFFSET+1),before.data.slice(WHEEL_OFFSET+1));
+  assert.equal(api.configurationActive,false);
+  assert.deepEqual(device.trace.slice(-3).map(x=>x.set),['0718110000000000','0718000000000000','0720000000000000']);
+});
+test('each wheel edit preserves opposite direction and rejects unsupported backup values',()=>{
+  const original=new Uint8Array(CONFIG_SIZE);original[WHEEL_OFFSET]=0x10;
+  for(const direction of ['up','down']) for(const [code] of WHEEL_ACTIONS) {
+    const after=setWheel(original,direction,code),opposite=direction==='up'?'down':'up';
+    assert.equal(wheelValue(after,opposite),wheelValue(original,opposite));
+  }
+  const draft=original.slice();draft[WHEEL_OFFSET]=0xff;
+  assert.throws(()=>settingsOnly(original,draft),/ホイール設定/);
+});
+test('read-only snapshot exits configuration mode even for an invalid header',async()=>{
+  const device=new MockDevice(),api=new K810(device,{wait:noWait});
+  device.memory[0xd0]=0;
+  await assert.rejects(api.snapshot(),/ヘッダー/);
+  assert.equal(device.commits,0);
+  assert.deepEqual(device.trace.slice(-3).map(x=>x.set),['0718110000000000','0718000000000000','0720000000000000']);
 });

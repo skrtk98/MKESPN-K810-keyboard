@@ -7,7 +7,8 @@ from unittest.mock import patch
 
 from mkespn_k810_keyboard.cli import load_backup
 from mkespn_k810_keyboard.device import Device
-from mkespn_k810_keyboard.protocol import control_offset, keycode, packet, write_packets
+from mkespn_k810_keyboard.protocol import (control_offset, keycode, packet, write_packets,
+    CONFIG_SIZE, WHEEL_ACTIONS, WHEEL_OFFSET, wheel_action, set_wheel, changed_blocks)
 
 VECTORS = json.loads(Path(__file__).with_name('vendor_vectors.json').read_text())
 
@@ -27,8 +28,54 @@ class FakeHid:
         self.index += 1
         return [report_id, value] + [0] * (length - 2)
 
+    def close(self):
+        self.closed = True
+
 
 class ProtocolTests(unittest.TestCase):
+    @patch('mkespn_k810_keyboard.device.time.sleep')
+    def test_close_exits_configuration_mode(self, sleep):
+        device = object.__new__(Device); device.hid = FakeHid()
+        device.send(packet(1))
+        self.assertTrue(device.configuration_active)
+        device.close()
+        self.assertEqual(device.hid.trace[-3:], [
+            {'set': '0718110000000000'}, {'set': '0718000000000000'}, {'set': '0720000000000000'}])
+        self.assertEqual(device.hid.trace[-1], {'set': '0720000000000000'})
+        self.assertFalse(device.configuration_active)
+        self.assertTrue(device.hid.closed)
+    def test_wheel_menu_matches_original_x86(self):
+        values = list(WHEEL_ACTIONS.values())
+        for entry in VECTORS['wheel_menu']:
+            self.assertEqual(entry['code'], values[entry['choice']])
+
+    def test_wheel_packing_matches_original_x86(self):
+        names = {v: k for k, v in WHEEL_ACTIONS.items()}
+        for entry in VECTORS['wheel_packing']:
+            data = bytes(CONFIG_SIZE)
+            data = set_wheel(set_wheel(data, 'up', names[entry['up']]), 'down', names[entry['down']])
+            self.assertEqual(bytes(data[WHEEL_OFFSET:WHEEL_OFFSET+1]).hex(), entry['data'])
+            self.assertEqual(entry['address'], 0xE0 + WHEEL_OFFSET)
+            self.assertEqual(wheel_action(data, 'up'), names[entry['up']])
+            self.assertEqual(wheel_action(data, 'down'), names[entry['down']])
+
+    def test_wheel_single_byte_write_matches_original_x86(self):
+        self.assertEqual([{'set': b.hex()} for b in write_packets(0x100, b'\x23')], VECTORS['wheel_write'])
+
+    def test_wheel_change_preserves_other_nibble_and_configuration(self):
+        before = bytes([0x10] * CONFIG_SIZE)
+        for direction in ('up', 'down'):
+            for action in WHEEL_ACTIONS:
+                after = set_wheel(before, direction, action)
+                opposite = 'down' if direction == 'up' else 'up'
+                self.assertEqual(wheel_action(after, opposite), wheel_action(before, opposite))
+                self.assertEqual(after[:WHEEL_OFFSET], before[:WHEEL_OFFSET])
+                self.assertEqual(after[WHEEL_OFFSET+1:], before[WHEEL_OFFSET+1:])
+                blocks = changed_blocks(before, after)
+                self.assertTrue(all(o == WHEEL_OFFSET and len(b) == 1 for o, b in blocks))
+        with self.assertRaises(ValueError): set_wheel(before, 'up', 'f13')
+        after = bytearray(before); after[0] ^= 1
+        with self.assertRaises(ValueError): changed_blocks(before, after)
     def test_write_matches_original_x86(self):
         actual = [{"set": b.hex()} for b in write_packets(VECTORS['address'], bytes.fromhex(VECTORS['data']))]
         self.assertEqual(VECTORS['write'], actual)

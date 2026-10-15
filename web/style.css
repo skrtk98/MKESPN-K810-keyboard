@@ -80,6 +80,10 @@ h3 { font-size:24px; margin-bottom:24px; }
 #key-help { margin:12px 0 20px; }
 hr { border:0; border-top:1px solid #ccc; margin:24px 0; }
 .review { padding:32px; border:1px solid #949494; border-radius:8px; margin-top:24px; }
+.wheel-panel { margin-top:24px; padding:32px; border:1px solid #949494; border-radius:8px; }
+.wheel-fields { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-block:24px; }
+.wheel-fields p { margin-bottom:8px; }
+@media(max-width:600px) { .wheel-fields { grid-template-columns:1fr; } .wheel-panel { padding:20px; } }
 #change-count { font-size:14px; font-weight:700; color:#4d4d4d; }
 .changes { list-style:none; padding:0; margin:8px 0 24px; }
 .changes li { display:grid; grid-template-columns:1.2fr 1fr 24px 1fr; align-items:center; gap:8px; padding:12px 0; border-bottom:1px solid #ccc; font-size:14px; }

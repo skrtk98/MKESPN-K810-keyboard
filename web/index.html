@@ -39,7 +39,7 @@
         <div class="keyboard-top"><span>MKESPN <strong>K810</strong></span><span>USB 接続</span></div>
         <div class="device-body"><div id="keypad" class="keypad" role="group" aria-label="12キー"></div>
           <div class="stick-area"><span class="hardware-label">スティック</span><div id="stick" class="stick" role="group" aria-label="スティック4方向"></div></div>
-          <div class="roller" aria-label="ホイールの設定は未対応"><span></span><small>ホイール · 未対応</small></div>
+          <a class="roller" href="#wheel-title" aria-label="ホイール設定へ移動"><span></span><small>ホイール設定へ</small></a>
         </div>
         <p class="device-caption">実機の配置をもとに表示しています。<br>青枠は選択中、<span class="change-mark">●</span> は未保存の変更です。</p>
       </section>
@@ -56,8 +56,19 @@
         <hr><p class="small">図の表示は割り当てた出力キーです。キーキャップの刻印と異なる場合があります。</p>
       </section>
     </div>
+    <section class="wheel-panel" aria-labelledby="wheel-title"><h2 id="wheel-title">ホイールの割り当て</h2>
+      <p>回転方向ごとに操作を設定できます。本体のスティック押し込みで、音量操作モードとカスタム操作モードを切り替えてください。</p>
+      <div class="wheel-fields">
+        <div><label class="field-label" for="wheel-up">上方向の回転（Roll Up）</label><p class="muted small">本体の設定：<span id="wheel-current-up">未読み取り</span></p>
+          <span class="dads-select"><span class="dads-select__control"><select id="wheel-up" class="dads-select__select" data-size="md" aria-describedby="wheel-help"></select><svg class="dads-select__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor"/></svg></span></span></div>
+        <div><label class="field-label" for="wheel-down">下方向の回転（Roll Down）</label><p class="muted small">本体の設定：<span id="wheel-current-down">未読み取り</span></p>
+          <span class="dads-select"><span class="dads-select__control"><select id="wheel-down" class="dads-select__select" data-size="md" aria-describedby="wheel-help"></select><svg class="dads-select__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor"/></svg></span></span></div>
+      </div>
+      <p id="wheel-help" class="muted small">方向名はメーカーの表記です。実際の回転方向が逆なら、割り当てを入れ替えてください。LED速度・明るさの動作は未確認です。任意キーやマクロの割り当てには対応していません。</p>
+      <button id="wheel-swap" class="dads-button" data-size="sm" data-type="text" disabled>上方向と下方向を入れ替える</button>
+    </section>
     <section class="review" aria-labelledby="review-title"><div class="section-heading"><h2 id="review-title">3. 変更を確認して保存</h2><span id="change-count">変更なし</span></div>
-      <p id="no-changes" class="muted">キーを編集すると、ここに変更内容が表示されます。</p>
+      <p id="no-changes" class="muted">キーやホイールを編集すると、ここに変更内容が表示されます。</p>
       <ul id="changes" class="changes"></ul>
       <div class="save-actions"><button id="apply" class="dads-button" data-size="md" data-type="solid-fill" disabled>キーボードに保存する</button>
         <button id="reset" class="dads-button" data-size="md" data-type="outline" disabled>変更をすべて取り消す</button>
@@ -70,11 +81,11 @@
         <button id="import" class="dads-button" data-size="md" data-type="outline" disabled>ファイルから復元</button>
         <button id="recovery" class="dads-button" data-size="md" data-type="text" disabled>保存前の復元データを取得</button></div>
       <input type="file" id="backup-file" accept=".json,application/json" hidden>
-      <p class="muted small">設定領域248バイトのバックアップです。復元対象は12キーとスティック4方向のみ。同じ個体のバックアップを使用してください。</p>
+      <p class="muted small">設定領域248バイトのバックアップです。復元対象は12キー・スティック4方向・ホイールの割り当てです。同じ個体のバックアップを使用してください。</p>
     </section>
     <section id="guide" class="guide"><h2>使い方と対応環境</h2>
       <details><summary>初めて使うとき</summary><ol><li>PCにK810をUSB接続し、ChromeまたはEdgeでこのページを開きます。</li><li>「K810に接続する」を押し、「USB Keyboard」を選択して接続を許可します。</li><li>図のキーを選んで割り当てを編集し、変更一覧を確認して保存します。</li></ol><p>機器一覧に出ない場合は、USBの接続を確認し、他の設定アプリやこのツールの別タブを閉じてください。</p></details>
-      <details><summary>対応しているブラウザ・機能</summary><p>実機通信の対象はWebHIDに対応するPC版Chrome・Edgeです。Safari・Firefox、iPhone・iPad、通常のAndroidブラウザからの実機設定変更には対応していません。画面のデモはスマートフォンでも試せます。</p><p>RGB、ホイール、スティック押し込み、プロファイル切替、マクロは未対応です。対応機器はMKESPN K810（USB 30FA:2350）。Logitech K810は別製品です。</p></details>
+      <details><summary>対応しているブラウザ・機能</summary><p>実機通信の対象はWebHIDに対応するPC版Chrome・Edgeです。Safari・Firefox、iPhone・iPad、通常のAndroidブラウザからの実機設定変更には対応していません。画面のデモはスマートフォンでも試せます。</p><p>RGB全般、スティック押し込みの再割り当て、プロファイル切替、マクロは未対応です。ホイールは8種類の操作を選べますが、LED関連4項目の動作は未確認です。対応機器はMKESPN K810（USB 30FA:2350）。Logitech K810は別製品です。</p></details>
       <details><summary>データの取り扱い・復元について</summary><p>USB通信と設定処理はこのブラウザ内で完結し、設定をサーバーに送信しません。アクセス解析・外部フォント・外部スクリプトは使用していません。サイトの配信はGitHub Pagesを利用します。</p><p>保存前の復元データは、このブラウザのローカルストレージに1件保持します。ブラウザのデータを消すと失われるため、必要に応じてJSONを取得してください。機器の識別に使えるシリアル番号がないため、別個体のバックアップを取り違えないでください。</p></details>
     </section>
   </main>

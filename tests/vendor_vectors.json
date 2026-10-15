@@ -195,5 +195,148 @@
       "address": 448,
       "data": "13273b4f63778b9f"
     }
+  ],
+  "wheel_menu": [
+    {
+      "choice": 0,
+      "direction": 0,
+      "code": 0
+    },
+    {
+      "choice": 0,
+      "direction": 1,
+      "code": 0
+    },
+    {
+      "choice": 1,
+      "direction": 0,
+      "code": 1
+    },
+    {
+      "choice": 1,
+      "direction": 1,
+      "code": 1
+    },
+    {
+      "choice": 2,
+      "direction": 0,
+      "code": 2
+    },
+    {
+      "choice": 2,
+      "direction": 1,
+      "code": 2
+    },
+    {
+      "choice": 3,
+      "direction": 0,
+      "code": 3
+    },
+    {
+      "choice": 3,
+      "direction": 1,
+      "code": 3
+    },
+    {
+      "choice": 4,
+      "direction": 0,
+      "code": 7
+    },
+    {
+      "choice": 4,
+      "direction": 1,
+      "code": 7
+    },
+    {
+      "choice": 5,
+      "direction": 0,
+      "code": 8
+    },
+    {
+      "choice": 5,
+      "direction": 1,
+      "code": 8
+    },
+    {
+      "choice": 6,
+      "direction": 0,
+      "code": 9
+    },
+    {
+      "choice": 6,
+      "direction": 1,
+      "code": 9
+    },
+    {
+      "choice": 7,
+      "direction": 0,
+      "code": 10
+    },
+    {
+      "choice": 7,
+      "direction": 1,
+      "code": 10
+    }
+  ],
+  "wheel_packing": [
+    {
+      "up": 0,
+      "down": 1,
+      "address": 256,
+      "data": "01"
+    },
+    {
+      "up": 1,
+      "down": 0,
+      "address": 256,
+      "data": "10"
+    },
+    {
+      "up": 2,
+      "down": 3,
+      "address": 256,
+      "data": "23"
+    },
+    {
+      "up": 3,
+      "down": 2,
+      "address": 256,
+      "data": "32"
+    },
+    {
+      "up": 7,
+      "down": 8,
+      "address": 256,
+      "data": "78"
+    },
+    {
+      "up": 8,
+      "down": 7,
+      "address": 256,
+      "data": "87"
+    },
+    {
+      "up": 9,
+      "down": 10,
+      "address": 256,
+      "data": "9a"
+    },
+    {
+      "up": 10,
+      "down": 9,
+      "address": 256,
+      "data": "a9"
+    }
+  ],
+  "wheel_write": [
+    {
+      "set": "0718030000012300"
+    },
+    {
+      "set": "0718090000010000"
+    },
+    {
+      "set": "0718010000010000"
+    }
   ]
 }

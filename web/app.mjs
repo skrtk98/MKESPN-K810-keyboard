@@ -1,4 +1,5 @@
-import {K810,CONTROLS,KEY_GROUPS,CONFIG_SIZE,keyLabel,offset,diffKeys,keymapOnly,backupOf,parseBackup} from './protocol.mjs';
+import {K810,CONTROLS,KEY_GROUPS,CONFIG_SIZE,keyLabel,offset,diffSettings,settingsOnly,backupOf,parseBackup,
+  WHEEL_ACTIONS,wheelLabel,wheelValue,setWheel} from './protocol.mjs';
 
 const $=id=>document.getElementById(id);
 const RECOVERY_KEY='mkespn-k810:recovery:v1';
@@ -7,7 +8,7 @@ const keyButtons=new Map();
 
 function message(text,type='info') { $('status').textContent=text; $('status').className=`notice ${type}`; }
 function render() {
-  const hasData=!!snapshot, changes=hasData?diffKeys(snapshot.data,draft):[];
+  const hasData=!!snapshot, changes=hasData?diffSettings(snapshot.data,draft):[];
   for(const [id,label] of CONTROLS) {
     const button=keyButtons.get(id), code=hasData?draft[offset(id)]:null;
     button.querySelector('.key-name').textContent=code===null?'—':keyLabel(code);
@@ -27,6 +28,18 @@ function render() {
     $('key-select').value=String(code);
   }
   $('key-select').disabled=busy||!hasData||uncertain;
+  for(const direction of ['up','down']) {
+    const select=$(`wheel-${direction}`);
+    select.querySelectorAll('[data-extra]').forEach(o=>o.remove());
+    if(hasData) {
+      const value=wheelValue(draft,direction);
+      if(!WHEEL_ACTIONS.some(a=>a[0]===value)) {const option=new Option(wheelLabel(value),String(value));option.dataset.extra='true';select.add(option);}
+      select.value=String(value);
+    }
+    select.disabled=busy||!hasData||uncertain;
+    $(`wheel-current-${direction}`).textContent=hasData?wheelLabel(wheelValue(snapshot.data,direction)):'未読み取り';
+  }
+  $('wheel-swap').disabled=busy||!hasData||uncertain||['up','down'].some(d=>!WHEEL_ACTIONS.some(a=>a[0]===wheelValue(draft,d)));
   $('revert-key').disabled=busy||!hasData||draft[offset(selected)]===snapshot?.data[offset(selected)];
   $('apply').disabled=busy||demo||!session||!changes.length||uncertain;
   $('reset').disabled=busy||!changes.length;
@@ -44,7 +57,8 @@ function render() {
   $('no-changes').hidden=changes.length>0;
   $('changes').replaceChildren(...changes.map(change=>{
     const li=document.createElement('li');
-    for(const [tag,text] of [['span',change.label],['span',keyLabel(change.before)],['span','→'],['strong',keyLabel(change.after)]]) {
+    const label=change.kind==='wheel'?wheelLabel:keyLabel;
+    for(const [tag,text] of [['span',change.label],['span',label(change.before)],['span','→'],['strong',label(change.after)]]) {
       const item=document.createElement(tag); item.textContent=text; li.append(item);
     }
     return li;
@@ -93,12 +107,21 @@ for(const [label,keys] of KEY_GROUPS) {
   for(const [code,name] of keys) group.append(new Option(name,String(code)));
   $('key-select').append(group);
 }
+for(const direction of ['up','down']) {
+  const select=$(`wheel-${direction}`);
+  for(const [code,label] of WHEEL_ACTIONS) select.add(new Option(label,String(code)));
+  select.addEventListener('change',()=>{if(!busy&&draft){draft=setWheel(draft,direction,Number(select.value));render();}});
+}
+$('wheel-swap').addEventListener('click',()=>{
+  const up=wheelValue(draft,'up'),down=wheelValue(draft,'down');
+  draft=setWheel(setWheel(draft,'up',down),'down',up);render();
+});
 $('key-select').addEventListener('change',()=>{if(!busy&&draft) {draft[offset(selected)]=Number($('key-select').value);render();}});
 $('revert-key').addEventListener('click',()=>{draft[offset(selected)]=snapshot.data[offset(selected)];render();});
 $('reset').addEventListener('click',()=>{draft=snapshot.data.slice();render();message('未保存の変更をすべて取り消しました。');});
 $('connect').addEventListener('click',()=>run(async()=>{
-  const devices=await navigator.hid.requestDevice({filters:[{vendorId:0x30fa,productId:0x2350,usagePage:0xff01,usage:1}]});
-  console.info('WebHID selection',JSON.stringify(devices.map(d=>({vendorId:d.vendorId,productId:d.productId,collections:d.collections}))));
+  let devices=(await navigator.hid.getDevices()).filter(d=>K810.matches(d));
+  if(devices.length!==1) devices=await navigator.hid.requestDevice({filters:[{vendorId:0x30fa,productId:0x2350,usagePage:0xff01,usage:1}]});
   const device=devices.find(d=>K810.matches(d));
   if(!device) throw new Error('対応するK810が選択されていません。');
   const candidate=new K810(device,{progress:(done,total)=>message(`本体の設定を読み取っています… ${Math.round(done/total*100)}%`)});
@@ -114,13 +137,14 @@ $('connect').addEventListener('click',()=>run(async()=>{
   } catch(error) { if(device.opened) await device.close(); throw error; }
 }));
 $('disconnect').addEventListener('click',()=>run(async()=>{
-  await session.device.close(); session=null; snapshot=null;draft=null;demo=false;uncertain=false;
+  await session.finishConfiguration(); await session.device.close(); session=null; snapshot=null;draft=null;demo=false;uncertain=false;
   $('device-status').textContent='未接続';$('device-status').className='';message('キーボードとの接続を終了しました。');
 }));
 $('demo').addEventListener('click',()=>{
   if(busy||session) return;
   demo=true;
   const data=new Uint8Array(CONFIG_SIZE).fill(255);
+  data[0x20]=0x10;
   const codes=[20,26,8,21,41,4,22,7,40,43,44,6,80,79,81,82];
   CONTROLS.forEach(([id],i)=>data[offset(id)]=codes[i]);
   setSnapshot({base:0xe0,header:Uint8Array.of(0xe1,0x1e,0xe0,0,0xf0,0x0f,0,0),data});
@@ -146,10 +170,10 @@ $('backup-file').addEventListener('change',()=>run(async()=>{
   if(file.size>16384) throw new Error('バックアップファイルが大きすぎます。');
   const value=await parseBackup(JSON.parse(await file.text()));
   if(value.base!==snapshot.base) throw new Error('本体とバックアップの設定位置が一致しません。');
-  draft=keymapOnly(snapshot.data,value.data);
+  draft=settingsOnly(snapshot.data,value.data);
   message('復元内容を読み込みました。変更一覧を確認し、「キーボードに保存する」で適用してください。');
 }));
-window.addEventListener('beforeunload',event=>{if(busy||(snapshot&&diffKeys(snapshot.data,draft).length)) {event.preventDefault();event.returnValue='';}});
+window.addEventListener('beforeunload',event=>{if(busy||(snapshot&&diffSettings(snapshot.data,draft).length)) {event.preventDefault();event.returnValue='';}});
 navigator.hid?.addEventListener('disconnect',event=>{
   if(event.device!==session?.device) return;
   session=null;uncertain=true;

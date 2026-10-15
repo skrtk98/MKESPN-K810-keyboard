@@ -7,7 +7,8 @@ import sys
 
 from .device import connect, enumerate_devices
 from .protocol import (CONFIG_SIZE, CONTROLS, KEYMAP_OFFSET, control_offset,
-                       keycode, keyname, validate_base, write_packets)
+                       keycode, keyname, validate_base, write_packets,
+                       WHEEL_ACTIONS, WHEEL_OFFSET, wheel_action, set_wheel, changed_blocks)
 
 
 def save_backup(device, base, meta, data, output=None):
@@ -42,16 +43,18 @@ def print_map(data):
     for control in CONTROLS:
         value = data[control_offset(control)]
         print(f"{control:>6}: {keyname(value):<14} (0x{value:02x})")
+    for direction in ("up", "down"):
+        print(f"wheel-{direction}: {wheel_action(data, direction)}")
+    print(f"wheel byte: 0x{data[WHEEL_OFFSET]:02x} (directions follow manufacturer naming)")
 
 
 def perform_change(device, base, meta, before, after, apply):
-    blocks = [(o, after[o:o + 8]) for o in range(KEYMAP_OFFSET, KEYMAP_OFFSET + 160, 8)
-              if before[o:o + 8] != after[o:o + 8]]
+    blocks = changed_blocks(before, after)
     if not blocks:
         print("No changes.")
         return
     for offset, block in blocks:
-        print(f"0x{base + offset:04x}: {before[offset:offset + 8].hex(' ')} -> {block.hex(' ')}")
+        print(f"0x{base + offset:04x}: {before[offset:offset + len(block)].hex(' ')} -> {block.hex(' ')}")
         for report in write_packets(base + offset, block):
             print(f"  SET_FEATURE {report.hex(' ')}")
     if not apply:
@@ -59,6 +62,8 @@ def perform_change(device, base, meta, before, after, apply):
         return
     backup = save_backup(device, base, meta, before)
     print(f"Backup: {backup.resolve()}")
+    if device.read_range(base, CONFIG_SIZE) != before:
+        raise OSError("Device configuration changed since snapshot; refusing to overwrite it")
     device.apply_blocks(base, blocks)
     actual = device.read_range(base, CONFIG_SIZE)
     if actual != bytes(after):
@@ -79,9 +84,14 @@ def main(argv=None):
     assign.add_argument("control", choices=CONTROLS)
     assign.add_argument("key", type=keycode)
     assign.add_argument("--apply", action="store_true")
+    wheel = sub.add_parser("set-wheel", help="Assign a manufacturer wheel action to one direction")
+    wheel.add_argument("direction", choices=("up", "down"))
+    wheel.add_argument("action", choices=WHEEL_ACTIONS)
+    wheel.add_argument("--apply", action="store_true")
     restore = sub.add_parser("restore", help="Restore only the keymap from a backup")
     restore.add_argument("backup")
     restore.add_argument("--apply", action="store_true")
+    restore.add_argument("--include-wheel", action="store_true", help="Also restore the wheel byte")
     args = parser.parse_args(argv)
     try:
         if args.command == "list":
@@ -105,12 +115,18 @@ def main(argv=None):
                 after = bytearray(before)
                 if args.command == "set-key":
                     after[control_offset(args.control)] = args.key
+                elif args.command == "set-wheel":
+                    after = set_wheel(before, args.direction, args.action)
                 else:
                     doc, saved = load_backup(args.backup)
                     if (doc['base'], doc['vendor_id'], doc['product_id']) != (
                             base, device.info['vendor_id'], device.info['product_id']):
                         raise ValueError("Backup device ID or configuration base does not match")
                     after[KEYMAP_OFFSET:KEYMAP_OFFSET + 160] = saved[KEYMAP_OFFSET:KEYMAP_OFFSET + 160]
+                    if args.include_wheel:
+                        if any(wheel_action(saved, d).startswith("unknown-") for d in ("up", "down")):
+                            raise ValueError("Backup contains unsupported wheel action values")
+                        after[WHEEL_OFFSET] = saved[WHEEL_OFFSET]
                 perform_change(device, base, meta, before, after, args.apply)
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(f"Error: {error}", file=sys.stderr)

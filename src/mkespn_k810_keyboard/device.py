@@ -21,17 +21,35 @@ class Device:
         self.info = info
         self.hid = hid.device()
         self.hid.open_path(info["path"])
+        self.configuration_active = False
 
     def close(self):
-        self.hid.close()
+        try:
+            self.finish_configuration()
+        finally:
+            self.hid.close()
+
+    def finish_configuration(self):
+        # Reads must be followed by the whole apply-handler finalization before
+        # the exit-handler command. 18/01 alone can leave physical inputs paused.
+        if getattr(self, "configuration_active", False):
+            self.send(packet(0x11))
+            time.sleep(.010)
+            self.send(packet())
+            self.send(bytes.fromhex("07 20 00 00 00 00 00 00"))
+            time.sleep(.010)
 
     def send(self, data):
         # This model's FeatureReportByteLength is 8 (confirmed via HidP_GetCaps).
         if len(data) != 8:
             raise ValueError("Expected an 8-byte feature report")
+        if data[1] in (0x18, 0x09):
+            self.configuration_active = True
         count = self.hid.send_feature_report(data)
         if count != len(data):
             raise OSError(f"Short feature write: {count}/{len(data)}")
+        if data[1] == 0x20:
+            self.configuration_active = False
 
     def get(self, length=8):
         result = bytes(self.hid.get_feature_report(7, length))
