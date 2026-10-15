@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="MKESPN K810のキー割り当てを、専用アプリなしでブラウザから変更。WebHID対応PCのChrome・Edge向け。">
+  <title>K810 キーボード設定</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./vendor/dads/global.css">
+  <link rel="stylesheet" href="./vendor/dads/button.css">
+  <link rel="stylesheet" href="./vendor/dads/select.css">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#main">本文へ移動</a>
+  <header class="site-header"><div class="header-inner">
+    <a href="./" class="wordmark"><svg width="32" height="24" viewBox="0 0 32 24" aria-hidden="true"><rect x="1" y="1" width="30" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 7h3m4 0h3m4 0h3M6 12h3m4 0h3m4 0h3M8 17h14" stroke="currentColor" stroke-width="2"/></svg> K810 <span>キーボード設定</span></a>
+    <a href="#guide">使い方</a>
+  </div></header>
+  <main id="main" class="container">
+    <div class="intro"><p class="eyebrow">MKESPN K810 · WebHID CONFIGURATOR</p>
+      <h1>キーの割り当てを変更</h1><p class="lead">いつもの操作を、手元の12キーに。<br>専用アプリなしで、キーボード本体に設定を保存できます。</p>
+    </div>
+    <noscript><p class="notice error">このツールの利用にはJavaScriptを有効にしてください。</p></noscript>
+    <div id="compatibility" class="notice" hidden></div>
+    <section class="connection" aria-labelledby="connection-title">
+      <div><h2 id="connection-title">1. キーボードを接続</h2><p id="device-status"><span class="status-dot"></span>未接続</p><p class="muted">K810をUSBで接続し、ブラウザの選択画面で許可してください。</p></div>
+      <div class="connect-actions"><button id="connect" class="dads-button" data-size="md" data-type="solid-fill">K810に接続する</button>
+      <button id="demo" class="dads-button" data-size="sm" data-type="text">接続せずに試す</button>
+      <button id="disconnect" class="dads-button" data-size="sm" data-type="text" hidden>切断する</button></div>
+    </section>
+    <div id="status" class="notice" role="status" aria-live="polite">キーボードを接続すると、現在の設定を読み取ります。</div>
+    <div class="section-heading"><h2>2. キーを選んで編集</h2><span id="mode-badge" class="badge">プレビュー</span></div>
+    <p class="muted">図のキーを選び、右のメニューから出力するキーを指定してください。</p>
+    <div id="workspace" class="workspace" aria-busy="false">
+      <section class="keyboard-panel" aria-label="キーボードの配置">
+        <div class="keyboard-top"><span>MKESPN <strong>K810</strong></span><span>USB 接続</span></div>
+        <div class="device-body"><div id="keypad" class="keypad" role="group" aria-label="12キー"></div>
+          <div class="stick-area"><span class="hardware-label">スティック</span><div id="stick" class="stick" role="group" aria-label="スティック4方向"></div></div>
+          <div class="roller" aria-label="ホイールの設定は未対応"><span></span><small>ホイール · 未対応</small></div>
+        </div>
+        <p class="device-caption">実機の配置をもとに表示しています。<br>青枠は選択中、<span class="change-mark">●</span> は未保存の変更です。</p>
+      </section>
+      <section class="editor" aria-labelledby="editor-title">
+        <p class="eyebrow">選択中のキー</p><h3 id="editor-title">上段 1</h3>
+        <dl class="current"><dt>本体の設定</dt><dd id="current-key">未読み取り</dd></dl>
+        <label for="key-select" class="field-label">割り当てるキー</label>
+        <span class="dads-select"><span class="dads-select__control">
+          <select id="key-select" class="dads-select__select" data-size="md" aria-describedby="key-help"></select>
+          <svg class="dads-select__chevron" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor"/></svg>
+        </span></span>
+        <p id="key-help" class="muted small">単一のキーを指定できます。Ctrl+Cなどの組み合わせや連続マクロには対応していません。</p>
+        <button id="revert-key" class="dads-button" data-size="sm" data-type="text" disabled>このキーの変更を取り消す</button>
+        <hr><p class="small">図の表示は割り当てた出力キーです。キーキャップの刻印と異なる場合があります。</p>
+      </section>
+    </div>
+    <section class="review" aria-labelledby="review-title"><div class="section-heading"><h2 id="review-title">3. 変更を確認して保存</h2><span id="change-count">変更なし</span></div>
+      <p id="no-changes" class="muted">キーを編集すると、ここに変更内容が表示されます。</p>
+      <ul id="changes" class="changes"></ul>
+      <div class="save-actions"><button id="apply" class="dads-button" data-size="md" data-type="solid-fill" disabled>キーボードに保存する</button>
+        <button id="reset" class="dads-button" data-size="md" data-type="outline" disabled>変更をすべて取り消す</button>
+        <button id="reload" class="dads-button" data-size="md" data-type="text" disabled>本体から再読み取り</button></div>
+      <p class="muted small">保存前の設定は復元用としてブラウザに保持します。保存中はUSBを抜かず、この画面を開いたままにしてください。</p>
+    </section>
+    <section class="backup-section" aria-labelledby="backup-title"><h2 id="backup-title">バックアップと復元</h2>
+      <p>現在の設定をJSONファイルとして保存できます。復元ファイルを読み込んだ後も、「キーボードに保存する」を押すまで本体は変更されません。</p>
+      <div class="save-actions"><button id="export" class="dads-button" data-size="md" data-type="outline" disabled>現在の設定を保存</button>
+        <button id="import" class="dads-button" data-size="md" data-type="outline" disabled>ファイルから復元</button>
+        <button id="recovery" class="dads-button" data-size="md" data-type="text" disabled>保存前の復元データを取得</button></div>
+      <input type="file" id="backup-file" accept=".json,application/json" hidden>
+      <p class="muted small">設定領域248バイトのバックアップです。復元対象は12キーとスティック4方向のみ。同じ個体のバックアップを使用してください。</p>
+    </section>
+    <section id="guide" class="guide"><h2>使い方と対応環境</h2>
+      <details><summary>初めて使うとき</summary><ol><li>PCにK810をUSB接続し、ChromeまたはEdgeでこのページを開きます。</li><li>「K810に接続する」を押し、「USB Keyboard」を選択して接続を許可します。</li><li>図のキーを選んで割り当てを編集し、変更一覧を確認して保存します。</li></ol><p>機器一覧に出ない場合は、USBの接続を確認し、他の設定アプリやこのツールの別タブを閉じてください。</p></details>
+      <details><summary>対応しているブラウザ・機能</summary><p>実機通信の対象はWebHIDに対応するPC版Chrome・Edgeです。Safari・Firefox、iPhone・iPad、通常のAndroidブラウザからの実機設定変更には対応していません。画面のデモはスマートフォンでも試せます。</p><p>RGB、ホイール、スティック押し込み、プロファイル切替、マクロは未対応です。対応機器はMKESPN K810（USB 30FA:2350）。Logitech K810は別製品です。</p></details>
+      <details><summary>データの取り扱い・復元について</summary><p>USB通信と設定処理はこのブラウザ内で完結し、設定をサーバーに送信しません。アクセス解析・外部フォント・外部スクリプトは使用していません。サイトの配信はGitHub Pagesを利用します。</p><p>保存前の復元データは、このブラウザのローカルストレージに1件保持します。ブラウザのデータを消すと失われるため、必要に応じてJSONを取得してください。機器の識別に使えるシリアル番号がないため、別個体のバックアップを取り違えないでください。</p></details>
+    </section>
+  </main>
+  <footer><div class="container"><p><strong>K810 キーボード設定</strong> · 非公式オープンソースツール</p><p><a href="https://github.com/skrtk98/MKESPN-K810-keyboard">ソースコード・解析記録</a> <span aria-hidden="true">／</span> <a href="https://design.digital.go.jp/dads/">デジタル庁デザインシステム</a></p><p class="small muted">デジタル庁の公式サンプルCSSを使用しています。このサイトはデジタル庁およびキーボードメーカーが提供するものではありません。</p></div></footer>
+</body>
+</html>
