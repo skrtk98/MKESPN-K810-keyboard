@@ -1,4 +1,4 @@
-import {lightMask,LIGHT_MODES} from './lighting.mjs?v=20261015-feedback';
+import {lightMask,LIGHT_MODES} from './lighting.mjs?v=20261015-hardware';
 export const MACRO_CODES=[...Array.from({length:11},(_,i)=>0xa5+i),...Array.from({length:9},(_,i)=>0xb8+i)];
 const MODES={'repeat':0,'while-held':2,'until-click':1},BUTTONS={left:241,right:243,middle:242};
 function number(value,min,max,label) {

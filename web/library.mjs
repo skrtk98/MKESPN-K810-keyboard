@@ -1,4 +1,4 @@
-import {compileMacro} from './macros.mjs?v=20261015-feedback';
+import {compileMacro} from './macros.mjs?v=20261015-hardware';
 export const LIBRARY_KEY='mkespn-k810:macro-library:v1';
 export const emptyLibrary=()=>({format:'mkespn-k810-macro-library-v1',groups:[]});
 export function parseLibrary(input) {

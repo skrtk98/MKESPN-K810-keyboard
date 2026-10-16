@@ -1,5 +1,5 @@
-import {planMacro,restoreMacroImage,extendedBlocks,MACRO_CODES} from './macros.mjs?v=20261015-feedback';
-import {setLight,lightBlocks} from './lighting.mjs?v=20261015-feedback';
+import {planMacro,restoreMacroImage,extendedBlocks,MACRO_CODES} from './macros.mjs?v=20261015-hardware';
+import {setLight,lightBlocks} from './lighting.mjs?v=20261015-hardware';
 export const CONFIG_SIZE = 248;
 export const WHEEL_OFFSET = 0x20;
 export const WHEEL_ACTIONS = [
