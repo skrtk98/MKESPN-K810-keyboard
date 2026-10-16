@@ -316,7 +316,7 @@ main.container {
 .workspace {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    grid-template-areas: 'diagram key' 'diagram wheel'
+    grid-template-areas: 'diagram key'
 }
 
 .keyboard-panel {
@@ -701,29 +701,13 @@ main.container {
     margin-top: 8px
 }
 
-.wheel-editor {
-    grid-area: wheel;
-    padding: 16px;
-    border-left: 1px solid var(--color-neutral-solid-gray-300);
-    border-top: 1px solid var(--color-neutral-solid-gray-300);
-    min-width: 0
-}
 
-.wheel-editor h4 {
-    margin-bottom: 12px
-}
 
-.wheel-editor .wheel-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: end;
-    gap: 12px;
-    margin: 0 0 8px
-}
 
-.wheel-editor .wheel-fields p {
-    margin: 0 0 4px;
-    font-size: 14px
-}
+
+
+
+
 
 .key-view-controls {
     display: none
@@ -1067,11 +1051,7 @@ main.container {
 
 }
 
-@media(max-width:480px) {
-    .wheel-editor .wheel-fields {
-        grid-template-columns: 1fr;
-    }
-}
+
 
 @media(min-width:1000px) {
     [data-light-task=basic] {
@@ -1105,12 +1085,8 @@ main.container {
     }
 
     #workspace[data-view=layout]>.editor,
-    #workspace[data-view=layout]>.wheel-editor,
-    #workspace[data-view=key]>.keyboard-panel,
-    #workspace[data-view=key]>.wheel-editor,
-    #workspace[data-view=wheel]>.keyboard-panel,
-    #workspace[data-view=wheel]>.editor {
-        display: none
+    #workspace[data-view=key]>.keyboard-panel {
+        display: none;
     }
 
     .keyboard-panel {
@@ -1138,10 +1114,7 @@ main.container {
     }
 
     .editor,
-    .wheel-editor {
-        padding: 12px;
-        border: 0
-    }
+
 }
 
 @media(max-width:700px) {
@@ -1349,4 +1322,9 @@ main.container {
     .macro-heading-fields {
         grid-template-columns: 1fr;
     }
+}
+
+.roller>a[aria-current] {
+    background: var(--color-primitive-blue-100);
+    box-shadow: inset 0 0 0 2px var(--color-key-900);
 }

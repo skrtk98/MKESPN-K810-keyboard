@@ -22,8 +22,8 @@
   <link href="./vendor/dads/input-text.css" rel="stylesheet"/>
   <link href="./vendor/dads/checkbox.css" rel="stylesheet"/>
   <link href="./vendor/dads/form-control-label.css" rel="stylesheet"/>
-  <link href="./style.css?v=20261015-hardware" rel="stylesheet"/>
-  <script src="./app.mjs?v=20261015-hardware" type="module">
+  <link href="./style.css?v=20261016-unified" rel="stylesheet"/>
+  <script src="./app.mjs?v=20261016-unified" type="module">
   </script>
  </head>
  <body>
@@ -233,10 +233,7 @@
         配置
        </button>
        <button aria-pressed="false" class="dads-button" data-key-view="key" data-size="sm" data-type="outline">
-        キー設定
-       </button>
-       <button aria-pressed="false" class="dads-button" data-key-view="wheel" data-size="sm" data-type="outline">
-        ホイール
+        割り当て
        </button>
       </div>
       <div aria-busy="false" class="workspace" data-view="layout" id="workspace">
@@ -266,12 +263,12 @@
           <div aria-label="ホイール" class="roller" role="group">
            <span aria-hidden="true" class="wheel-shape">
            </span>
-           <a aria-label="ホイール上方向の設定へ移動" data-wheel-direction="up" href="#wheel-title" id="wheel-up-preview">
+           <a aria-label="ホイール上方向の設定へ移動" data-wheel-direction="up" href="#editor-title" id="wheel-up-preview">
             <span aria-hidden="true">
              ↑
             </span>
            </a>
-           <a aria-label="ホイール下方向の設定へ移動" data-wheel-direction="down" href="#wheel-title" id="wheel-down-preview">
+           <a aria-label="ホイール下方向の設定へ移動" data-wheel-direction="down" href="#editor-title" id="wheel-down-preview">
             <span aria-hidden="true">
              ↓
             </span>
@@ -285,7 +282,7 @@
          選択中のキー
         </p>
         <h4 id="editor-title">
-         上段 1
+         キー 1
         </h4>
         <dl class="current">
          <dt>
@@ -326,59 +323,10 @@
          <button class="dads-button" data-size="sm" data-type="text" disabled="" id="revert-key">
           元に戻す
          </button>
+         <button class="dads-button" data-size="sm" data-type="text" disabled="" id="wheel-swap">
+          上下を入れ替える
+         </button>
         </div>
-       </section>
-       <section aria-labelledby="wheel-title" class="wheel-editor" id="wheel-settings">
-        <h4 id="wheel-title">
-         ホイール
-        </h4>
-        <div class="wheel-fields">
-         <div>
-          <label class="field-label" for="wheel-up">
-           上方向
-          </label>
-          <p class="muted small">
-           本体の設定：
-           <span id="wheel-current-up">
-            未読み取り
-           </span>
-          </p>
-          <span class="dads-select">
-           <span class="dads-select__control">
-            <select class="dads-select__select" data-size="md" id="wheel-up">
-            </select>
-            <svg aria-hidden="true" class="dads-select__chevron" height="16" viewbox="0 0 24 24" width="16">
-             <path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor">
-             </path>
-            </svg>
-           </span>
-          </span>
-         </div>
-         <div>
-          <label class="field-label" for="wheel-down">
-           下方向
-          </label>
-          <p class="muted small">
-           本体の設定：
-           <span id="wheel-current-down">
-            未読み取り
-           </span>
-          </p>
-          <span class="dads-select">
-           <span class="dads-select__control">
-            <select class="dads-select__select" data-size="md" id="wheel-down">
-            </select>
-            <svg aria-hidden="true" class="dads-select__chevron" height="16" viewbox="0 0 24 24" width="16">
-             <path d="M12 17L3 8L4 7L12 15L20 7L21 8L12 17Z" fill="currentColor">
-             </path>
-            </svg>
-           </span>
-          </span>
-         </div>
-        </div>
-        <button class="dads-button" data-size="sm" data-type="text" disabled="" id="wheel-swap">
-         上下を入れ替える
-        </button>
        </section>
       </div>
      </div>
@@ -798,13 +746,13 @@
          図のキーを選んで割り当てを変更します。青い枠は編集中のキーです。図の文字は実機の印字です。各キーにマウスポインターを重ねると、本体の割り当てと未保存の変更を確認できます。キーの組み合わせやマウス操作は「マクロを設定」から編集します。
         </p>
         <p id="wheel-help">
-         上方向・下方向はメーカーのRoll Up／Roll Downに対応します。操作したい向きと逆の場合は「上下を入れ替える」を使います。任意キー・マクロはホイールに割り当てられません。
+         図のホイールの↑・↓を選ぶと、キー・スティックと同じ編集欄で設定できます。ホイールでは音量・スクロール・照明の8操作を選べます。任意のキーやマクロの保存形式は特定できていないため選べません。向きが逆の場合は「上下を入れ替える」を使います。
         </p>
         <p>
          音量アップ・照明モード切り替えは実機確認済みです。照明オン／オフは検証個体では反応せず、その他の単独操作とホイールのLED操作は検証中です。
         </p>
         <p>
-         この静的サイトには入力テスト・入力監視・ハイライト機能はありません。保存後は実際に操作して動作を確認してください。小さい画面では「配置」「キー設定」「ホイール」で表示内容を切り替えます。
+         この静的サイトには入力テスト・入力監視・ハイライト機能はありません。保存後は実際に操作して動作を確認してください。小さい画面では「配置」「割り当て」で表示内容を切り替えます。
         </p>
        </div>
       </details>
@@ -855,6 +803,7 @@
         </p>
         <p>
          メディア・照明の単独操作、ショートカット、キーボード・マウス・待機・照明シーケンスのマクロ、Light設定とブラウザ内ライブラリを実装しています。実機検証は継続中で、保存値の一致だけでは全機能の動作を保証できません。スティック押し込みの再割り当て、プロファイル切替、GPIO制御、メーカー形式のマクロファイル入出力は未対応です。ホイールは8種類の操作を選べますが、LED関連4項目の動作は未確認です。対応機器はMKESPN K810（USB 30FA:2350）。Logitech K810は別製品です。
+         スティック押し込みは保存位置を特定し、F19への変更を実機で確認しています。Web版の登録欄は未実装です。
         </p>
        </div>
       </details>

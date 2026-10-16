@@ -3,7 +3,7 @@ import {
     fieldError,
     clearFieldError,
     validateFields
-} from './form-controls.mjs?v=20261015-hardware';
+} from './form-controls.mjs?v=20261016-unified';
 import {
     K810,
     CONTROLS,
@@ -16,31 +16,32 @@ import {
     backupOf,
     parseBackup,
     WHEEL_ACTIONS,
+    WHEEL_OFFSET,
     wheelLabel,
     wheelValue,
     setWheel
-} from './protocol.mjs?v=20261015-hardware';
+} from './protocol.mjs?v=20261016-unified';
 import {
     compileMacro,
     decodeMacro,
     macroKey,
     MACRO_CODES
-} from './macros.mjs?v=20261015-hardware';
+} from './macros.mjs?v=20261016-unified';
 import {
     LIGHT_MODES,
     decodeLight,
     setLight
-} from './lighting.mjs?v=20261015-hardware';
+} from './lighting.mjs?v=20261016-unified';
 import {
     LIBRARY_KEY,
     emptyLibrary,
     parseLibrary,
     persistLibrary
-} from './library.mjs?v=20261015-hardware';
+} from './library.mjs?v=20261016-unified';
 import {
     recordedKey,
     MacroRecorder
-} from './recording.mjs?v=20261015-hardware';
+} from './recording.mjs?v=20261016-unified';
 
 const $ = id => document.getElementById(id);
 const RECOVERY_KEY = 'mkespn-k810:recovery:v1';
@@ -71,6 +72,17 @@ const KEYCAPS = {
     down: '↓',
     up: '↑'
 };
+const controlName = id => `${['left','right','down','up'].includes(id)?'スティック':'キー'} ${KEYCAPS[id]}`;
+const WHEEL_GROUPS = [
+    ['メディア', WHEEL_ACTIONS.filter(([code]) => [0, 1].includes(code))],
+    ['マウス', WHEEL_ACTIONS.filter(([code]) => [2, 3].includes(code))],
+    ['照明操作', WHEEL_ACTIONS.filter(([code]) => [7, 8, 9, 10].includes(code))],
+];
+let selectedWheel = null;
+const editingId = () => selectedWheel ? `wheel-${selectedWheel}` : selected;
+const editingName = () => selectedWheel ? `ホイール ${selectedWheel==='up'?'↑':'↓'}` : controlName(selected);
+const editingValue = data => selectedWheel ? wheelValue(data, selectedWheel) : data[offset(selected)];
+const editingLabel = code => selectedWheel ? wheelLabel(code) : keyLabel(code);
 const pendingMacros = new Map();
 let restoreImage = null;
 let pendingLight = {};
@@ -152,15 +164,23 @@ $('edit-key-macro').addEventListener('click', () => selectSettingsTab('macro', {
 }));
 for (const link of document.querySelectorAll('[data-wheel-direction]')) link.addEventListener('click', event => {
     event.preventDefault();
-    setKeyView('wheel');
-    $('wheel-settings').scrollIntoView({
+    if (busy) return;
+    selectedWheel = link.dataset.wheelDirection;
+    render();
+    setKeyView('key');
+    $('editor-title').scrollIntoView({
         block: 'nearest'
     });
-    $(`wheel-${link.dataset.wheelDirection}`).focus();
+    $('key-select').focus();
 });
-for (const [id, label] of CONTROLS) $('macro-key-select').add(new Option(label, id));
+for (const [id, label] of CONTROLS) {
+    const option = new Option(controlName(id), id);
+    option.setAttribute('aria-label', `${controlName(id)}、${label}`);
+    $('macro-key-select').add(option);
+}
 $('macro-key-select').addEventListener('change', () => {
     selected = $('macro-key-select').value;
+    selectedWheel = null;
     render();
 });
 
@@ -226,11 +246,18 @@ window.addEventListener('resize', fitWorkspace);
 
 function changesNow() {
     if (!snapshot) return [];
-    const changes = diffSettings(snapshot.data, draft).filter(c => !pendingMacros.has(c.id));
+    const changes = diffSettings(snapshot.data, draft).filter(c => !pendingMacros.has(c.id))
+        .map(change => KEYCAPS[change.id] ? {
+            ...change,
+            label: controlName(change.id)
+        } : change.kind === 'wheel' ? {
+            ...change,
+            label: `ホイール ${change.id==='wheel-up'?'↑':'↓'}`
+        } : change);
     for (const [id, spec] of pendingMacros) changes.push({
         kind: 'macro',
         id,
-        label: CONTROLS.find(c => c[0] === id)[1],
+        label: controlName(id),
         before: keyLabel(snapshot.data[offset(id)]),
         after: `マクロ（${spec.events.length}行）`
     });
@@ -296,23 +323,25 @@ $('status-close').addEventListener('click', () => {
 for (const id of ['result-dialog-close', 'result-dialog-ok']) $(id).addEventListener('click', () => $('result-dialog').close());
 
 function renderKeyChoices(hasData) {
-    const code = hasData ? draft[offset(selected)] : null;
-    if (categoryKey !== selected || categoryCode !== code || chosenCategory === null) {
-        categoryKey = selected;
+    const groups = selectedWheel ? WHEEL_GROUPS : KEY_GROUPS;
+    const code = hasData ? editingValue(draft) : null,
+        id = editingId();
+    if (categoryKey !== id || categoryCode !== code || chosenCategory === null) {
+        categoryKey = id;
         categoryCode = code;
-        chosenCategory = String(KEY_GROUPS.findIndex(([, keys]) => keys.some(([value]) => value === code)));
+        chosenCategory = String(groups.findIndex(([, keys]) => keys.some(([value]) => value === code)));
         if (chosenCategory === '-1') chosenCategory = hasData ? 'current' : '0';
     }
     const category = $('key-category'),
         choice = $('key-select');
     category.replaceChildren();
-    KEY_GROUPS.forEach(([label], i) => category.add(new Option(label, String(i))));
-    if (code !== null && !KEY_GROUPS.some(([, keys]) => keys.some(([value]) => value === code))) category.add(new Option('現在の特殊割り当て', 'current'));
+    groups.forEach(([label], i) => category.add(new Option(label, String(i))));
+    if (code !== null && !groups.some(([, keys]) => keys.some(([value]) => value === code))) category.add(new Option('現在の特殊割り当て', 'current'));
     category.value = chosenCategory;
     choice.replaceChildren();
     const keys = chosenCategory === 'current' ? [
-        [code, keyLabel(code)]
-    ] : KEY_GROUPS[Number(chosenCategory)][1];
+        [code, editingLabel(code)]
+    ] : groups[Number(chosenCategory)][1];
     if (!keys.some(([value]) => value === code)) {
         const placeholder = new Option('選択してください', '', true, true);
         placeholder.disabled = true;
@@ -343,46 +372,38 @@ function render() {
         const changed = hasData && (pendingMacros.has(id) || code !== snapshot.data[offset(id)]);
         const proposed = pendingMacros.has(id) ? 'マクロ' : code === null ? '未読み取り' : keyLabel(code);
         button.querySelector('.key-name').textContent = printed;
-        button.setAttribute('aria-pressed', String(selected === id));
-        button.title = `${printed}（${label}）\n割り当て：${stored}${changed?`\n変更後（未保存）：${proposed}`:''}`;
+        button.setAttribute('aria-pressed', String(selectedWheel === null && selected === id));
+        button.title = `${controlName(id)}\n割り当て：${stored}${changed?`\n変更後（未保存）：${proposed}`:''}`;
         button.setAttribute('aria-label', `${label}、印字 ${printed}、割り当て ${stored}${changed?`、変更後 ${proposed}（未保存）`:''}`);
         button.classList.toggle('changed', changed);
         button.disabled = busy;
     }
-    $('editor-title').textContent = CONTROLS.find(c => c[0] === selected)[1];
+    $('editor-title').textContent = editingName();
+    $('editor-title').setAttribute('aria-label', selectedWheel ? editingName() : `${controlName(selected)}、${CONTROLS.find(c=>c[0]===selected)[1]}`);
     $('macro-key-select').value = selected;
     $('macro-key-select').disabled = busy;
     $('macro-controls').disabled = busy || !hasData || uncertain;
     $('read-macro').disabled = busy || !session || uncertain || !MACRO_CODES.includes(snapshot?.data[offset(selected)]);
-    $('current-key').textContent = hasData ? keyLabel(snapshot.data[offset(selected)]) : '未読み取り';
-    $('current-key').closest('.current').hidden = !hasData || (!pendingMacros.has(selected) && draft[offset(selected)] === snapshot.data[offset(selected)]);
+    $('current-key').textContent = hasData ? editingLabel(editingValue(snapshot.data)) : '未読み取り';
+    const edited = hasData && ((!selectedWheel && pendingMacros.has(selected)) || editingValue(draft) !== editingValue(snapshot.data));
+    $('current-key').closest('.current').hidden = !edited;
+    $('edit-key-macro').hidden = !!selectedWheel;
+    $('wheel-swap').hidden = !selectedWheel;
     renderKeyChoices(hasData);
     for (const direction of ['up', 'down']) {
-        const select = $(`wheel-${direction}`);
-        select.querySelectorAll('[data-extra]').forEach(o => o.remove());
-        if (hasData) {
-            const value = wheelValue(draft, direction);
-            if (!WHEEL_ACTIONS.some(a => a[0] === value)) {
-                const option = new Option(wheelLabel(value), String(value));
-                option.dataset.extra = 'true';
-                select.add(option);
-            }
-            select.value = String(value);
-        }
-        select.disabled = busy || !hasData || uncertain;
-        $(`wheel-current-${direction}`).textContent = hasData ? wheelLabel(wheelValue(snapshot.data, direction)) : '未読み取り';
-        $(`wheel-current-${direction}`).closest('p').hidden = !hasData || wheelValue(snapshot.data, direction) === wheelValue(draft, direction);
         const printed = direction === 'up' ? '↑' : '↓',
             directionName = direction === 'up' ? '上方向' : '下方向';
         const stored = hasData ? wheelLabel(wheelValue(snapshot.data, direction)) : '未読み取り';
         const changed = hasData && wheelValue(snapshot.data, direction) !== wheelValue(draft, direction);
         const proposed = hasData ? wheelLabel(wheelValue(draft, direction)) : '未読み取り';
         const preview = $(`wheel-${direction}-preview`);
+        if (selectedWheel === direction) preview.setAttribute('aria-current', 'true');
+        else preview.removeAttribute('aria-current');
         preview.title = `ホイール ${printed}（${directionName}）\n割り当て：${stored}${changed?`\n変更後（未保存）：${proposed}`:''}`;
         preview.setAttribute('aria-label', `ホイール${directionName}の設定へ移動、割り当て ${stored}${changed?`、変更後 ${proposed}（未保存）`:''}`);
     }
     $('wheel-swap').disabled = busy || !hasData || uncertain || ['up', 'down'].some(d => !WHEEL_ACTIONS.some(a => a[0] === wheelValue(draft, d)));
-    $('revert-key').disabled = busy || !hasData || (!pendingMacros.has(selected) && draft[offset(selected)] === snapshot?.data[offset(selected)]);
+    $('revert-key').disabled = busy || !edited;
     $('revert-key').hidden = $('current-key').closest('.current').hidden;
     $('apply').disabled = busy || demo || !session || !changes.length || uncertain;
     $('reset').disabled = busy || !changes.length;
@@ -492,21 +513,12 @@ for (const [id, label] of CONTROLS) {
     }
     button.addEventListener('click', () => {
         selected = id;
+        selectedWheel = null;
         render();
         setKeyView('key');
     });
     (CONTROLS.findIndex(c => c[0] === id) < 12 ? $('keypad') : $('stick')).append(button);
     keyButtons.set(id, button);
-}
-for (const direction of ['up', 'down']) {
-    const select = $(`wheel-${direction}`);
-    for (const [code, label] of WHEEL_ACTIONS) select.add(new Option(label, String(code)));
-    select.addEventListener('change', () => {
-        if (!busy && draft) {
-            draft = setWheel(draft, direction, Number(select.value));
-            render();
-        }
-    });
 }
 $('wheel-swap').addEventListener('click', () => {
     const up = wheelValue(draft, 'up'),
@@ -516,14 +528,22 @@ $('wheel-swap').addEventListener('click', () => {
 });
 $('key-select').addEventListener('change', () => {
     if (!busy && draft) {
-        pendingMacros.delete(selected);
-        draft[offset(selected)] = Number($('key-select').value);
+        if (selectedWheel) draft = setWheel(draft, selectedWheel, Number($('key-select').value));
+        else {
+            pendingMacros.delete(selected);
+            draft[offset(selected)] = Number($('key-select').value);
+        }
         render();
     }
 });
 $('revert-key').addEventListener('click', () => {
-    pendingMacros.delete(selected);
-    draft[offset(selected)] = snapshot.data[offset(selected)];
+    if (selectedWheel) {
+        const mask = selectedWheel === 'up' ? 0xf0 : 0x0f;
+        draft[WHEEL_OFFSET] = (draft[WHEEL_OFFSET] & ~mask) | (snapshot.data[WHEEL_OFFSET] & mask);
+    } else {
+        pendingMacros.delete(selected);
+        draft[offset(selected)] = snapshot.data[offset(selected)];
+    }
     render();
 });
 $('reset').addEventListener('click', () => {
@@ -897,7 +917,7 @@ function stage(spec) {
     try {
         compileMacro(spec);
         pendingMacros.set(selected, structuredClone(spec));
-        message(`${CONTROLS.find(c=>c[0]===selected)[1]}のマクロを変更一覧に追加しました。保存すると本体に反映されます。`, 'success');
+        message(`${controlName(selected)}のマクロを変更一覧に追加しました。保存すると本体に反映されます。`, 'success');
         render();
     } catch (error) {
         message(error.message, 'error');
