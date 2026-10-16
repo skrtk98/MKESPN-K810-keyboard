@@ -72,7 +72,9 @@ LED挿入は点灯パターン・色番号・持続時間のシーケンスと�
 - マクロのスロットコード：`A5..AF`, `B8..C0`。キー表から参照する20枠。
 - マクロ表：設定先頭の `+0x1E` のLEポインタ。この個体は `0x01D8`。1枠5バイト。
 - 表のシリアライズ：`0x411615..0x411690`。データのシリアライズ：`0x411790..0x41248B`。
-- 表：`07, countLo7 | whileHeld<<7, addressLo, addressHi6 | untilClick<<7 | releaseFlag<<6, countHi`。
+- 表：`07, countLo7 | whileHeld<<7, addressLo, addressHi6 | untilClick<<7 | unknownBit2<<6, countHi`。
+  `unknownBit2`は内部フラグ+3C bit2から移される。以前のreleaseFlagという呼称の意味は未実証。
+  [追加解析](MACRO_DEEP_ANALYSIS.md)にUIの保持・消去条件と表領域の検証を記録する。
 - データ：繰り返し回数LE16に続くイベント列、8バイト境界へゼロ埋め。
 - 通常キー／マウスボタン：待機8ms単位の7bit値（押す場合bit7）＋コード。左／右／中ボタンは `F1/F3/F2`。メニューのコマンドIDと挿入ハンドラー、実機Raw Inputを照合した。初期実装の `F0/F1/F2` は表示変換用コードとの取り違えだった。
 - 移動：`delay,F6,xLo,xHi,yLo,yHi`。スクロール：`delay,F7,steps,00`。

@@ -15,7 +15,7 @@ from unicorn.x86_const import UC_X86_REG_EAX, UC_X86_REG_EBP, UC_X86_REG_ESP, UC
 from verify_vendor import KNOWN_SHA256
 
 
-def trace(executable, keys_mode=1, flags=0xC0, macro=None, state=None):
+def trace(executable, keys_mode=1, flags=0xC0, macro=None, state=None, byte_state=None):
     if hashlib.sha256(executable).hexdigest() != KNOWN_SHA256:
         raise ValueError('Unknown vendor executable')
     pe = pefile.PE(data=executable, fast_load=True)
@@ -43,6 +43,10 @@ def trace(executable, keys_mode=1, flags=0xC0, macro=None, state=None):
         if not 0x61F000 <= address <= 0x648000:
             raise ValueError('Synthetic state address outside known globals')
         vm.mem_write(address, struct.pack('<I', value))
+    for address, value in (byte_state or {}).items():
+        if not 0x61F000 <= address <= 0x648000 or not 0 <= value <= 255:
+            raise ValueError('Synthetic byte state outside known globals/byte range')
+        vm.mem_write(address, bytes([value]))
     events = []
     heap = 0x2004000
 

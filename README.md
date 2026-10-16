@@ -157,6 +157,12 @@ LEDの4項目は元アプリから設定値を解析済みですが、実際のL
 ## 解析と検証
 
 [解析記録](docs/PROTOCOL.md) に入手先、SHA-256、解析アドレス、パケット形式、検証範囲を記載しています。
+追加調査の入口は[全体解析台帳](docs/FULL_REVERSE_ENGINEERING.md)です。
+独自入力経路は[RAW HID調査](docs/RAW_HID.md)、チップメーカーとの比較は
+[K201参照資料](docs/CHIP_REFERENCE.md)、マクロ表と未知フラグは
+[マクロ追加解析](docs/MACRO_DEEP_ANALYSIS.md)を参照してください。
+完了した検証と未解明の範囲を分けて記録しており、全機能の解析完了を示すものではありません。
+再現ツールの分類と実行方法は[tools/README.md](tools/README.md)にまとめています。
 メーカーアプリの通信処理だけをUnicorn内でエミュレートし、HID/Sleep呼び出しを置き換えて取得した
 参照パケットとPython実装を比較しています。通常の利用時に解析ツールや元アプリは不要です。
 

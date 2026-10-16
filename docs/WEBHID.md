@@ -41,6 +41,13 @@ as described by the specification. This implementation accepts the observed
 eight-byte form starting with ID 7 and rejects other formats.
 
 Only `30FA:2350`, UsagePage `FF01`, Usage 1 with Feature Report 7 is offered.
+
+The separate vendor input collection (`FF00/1`, Input Report 6, two payload
+bytes) can be opened natively. In the 2026-10-16 parallel hardware test it
+produced zero reports while the K810's standard collections produced 47 input
+events. No physical-input notification enable command has been identified in
+the vendor software. This is distinct from browser protection of standard
+keyboard/mouse collections; see [RAW_HID.md](RAW_HID.md).
 The previously observed `2130:30FA` variant remains unsupported in the Web UI.
 Chrome's protected keyboard input reports are not requested; the vendor
 configuration collection is separately accessible.
