@@ -11,6 +11,15 @@ Web版では12キー・スティック4方向とホイール2方向を変更・�
 書き込み前に復元用データをローカルストレージへ保存し、本体を再読して他のアプリによる変更がないか確認します。
 通常の書き込み後は設定248バイト、マクロ保存後はEEPROM全8,192バイトを照合します。復元用データの保存に失敗したときは書き込みません。
 
+> [!WARNING]
+> **無保証です。自己責任で使用してください。**
+> このツールはキーボード本体のEEPROMへ書き込みます。設定の消失、意図しない入力、キー入力ができなくなる状態、機器の故障が起きる可能性があります。
+> 検証はWindows上の実機1台（`30FA:2350`）で行っただけで、他の個体・ファームウェア・OSでの安全性は確認していません。
+> 本ソフトウェアは[MIT License](LICENSE)に基づき現状のまま提供され、作者は使用によって生じたいかなる損害についても責任を負いません。
+> 書き込む前に必ずバックアップを取得し、手元に保存してください。
+>
+> 非公式のツールであり、MKESPN、Instant、その他の製造・販売元とは関係がなく、承認も受けていません。
+
 ```powershell
 # Web版のローカル起動。http://localhost:8765/ を開く
 uv run python -m http.server 8765 --bind 127.0.0.1 --directory web
@@ -175,3 +184,8 @@ uv run --group research python tools/verify_vendor.py 'research/extracted/app/Ga
 
 参考: [kuriharaさんの分解記事](https://kurihara.hatenadiary.jp/entry/MKESPN_K810_keyboard)。
 メーカー配布物とバックアップはローカルの `research/`、`backups/` に保存し、Git管理から除外しています。
+
+## ライセンス
+
+[MIT License](LICENSE)。ただし `web/vendor/dads/` はデジタル庁デザインシステムの配布物で、同ディレクトリの[LICENSE.txt](web/vendor/dads/LICENSE.txt)と[NOTICE.md](web/vendor/dads/NOTICE.md)に従います。
+メーカーの配布物（インストーラ、実行ファイル、スキン、設定ファイル）は、このリポジトリに含めていません。
